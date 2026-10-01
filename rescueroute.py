@@ -7,12 +7,6 @@ Aluno: Thiago da Silva Lopes
 import sys
 from collections import deque
 
-if hasattr(sys.stdout, "reconfigure"):
-    try:
-        sys.stdout.reconfigure(encoding="utf-8")
-    except Exception:
-        pass
-
 
 # 1. ENTIDADE DE DOMÍNIO
 class ChamadoResgate:
@@ -31,25 +25,46 @@ class ChamadoResgate:
 # 2. TABELA HASH COM ENCADEAMENTO (Chaining) - O(1)
 class TabelaHash:
     def __init__(self, tamanho: int = 8):
+        if not isinstance(tamanho, int) or isinstance(tamanho, bool) or tamanho < 1:
+            raise ValueError("O tamanho da tabela deve ser um inteiro positivo.")
         self.tamanho = tamanho
         self.baldes = [[] for _ in range(tamanho)]
+        self.quantidade = 0
 
     def _hash(self, chave: str) -> int:
-        return sum(ord(c) for c in str(chave)) % self.tamanho
+        if not isinstance(chave, str):
+            raise TypeError("A chave da tabela hash deve ser texto.")
+        indice = 0
+        for caractere in chave:
+            indice = (indice * 31 + ord(caractere)) % self.tamanho
+        return indice
+
+    def _redimensionar(self) -> None:
+        itens = [item for balde in self.baldes for item in balde]
+        self.tamanho = self.tamanho * 2 + 1
+        self.baldes = [[] for _ in range(self.tamanho)]
+        for chave, valor in itens:
+            self.baldes[self._hash(chave)].append((chave, valor))
 
     def inserir(self, chave: str, valor: ChamadoResgate) -> None:
         balde = self.baldes[self._hash(chave)]
-        for item in balde:
-            if item[0] == chave:
-                item[1] = valor
+        for indice, (chave_existente, _) in enumerate(balde):
+            if chave_existente == chave:
+                balde[indice] = (chave, valor)
                 return
-        balde.append([chave, valor])
+        balde.append((chave, valor))
+        self.quantidade += 1
+        if self.quantidade / self.tamanho > 0.75:
+            self._redimensionar()
 
-    def buscar(self, chave: str):
+    def buscar(self, chave: str) -> ChamadoResgate | None:
         for item in self.baldes[self._hash(chave)]:
             if item[0] == chave:
                 return item[1]
         return None
+
+    def __len__(self) -> int:
+        return self.quantidade
 
 
 # 3. MIN-HEAP EM ARRAY (Fila de Prioridade) - O(log n)
@@ -84,7 +99,10 @@ class MinHeap:
         self.dados.append(item)
         self._sobe(len(self.dados) - 1)
 
-    def extrair_min(self):
+    def consultar_min(self) -> tuple | None:
+        return self.dados[0] if self.dados else None
+
+    def extrair_min(self) -> tuple | None:
         if not self.dados:
             return None
         if len(self.dados) == 1:
@@ -94,6 +112,9 @@ class MinHeap:
         self._desce(0)
         return raiz
 
+    def __len__(self) -> int:
+        return len(self.dados)
+
 
 # 4. GRAFO POR LISTA DE ADJACÊNCIA E BFS - O(V + E)
 class Grafo:
@@ -101,10 +122,18 @@ class Grafo:
         self.conexoes = {}
 
     def adicionar_via(self, a: str, b: str) -> None:
-        self.conexoes.setdefault(a, []).append(b)
-        self.conexoes.setdefault(b, []).append(a)
+        if not isinstance(a, str) or not a.strip() or not isinstance(b, str) or not b.strip():
+            raise ValueError("Os locais da via devem ser textos não vazios.")
+        if a == b:
+            raise ValueError("Uma via deve conectar dois locais diferentes.")
+        vizinhos_a = self.conexoes.setdefault(a, [])
+        vizinhos_b = self.conexoes.setdefault(b, [])
+        if b not in vizinhos_a:
+            vizinhos_a.append(b)
+        if a not in vizinhos_b:
+            vizinhos_b.append(a)
 
-    def bfs(self, inicio: str, destino: str):
+    def bfs(self, inicio: str, destino: str) -> list[str] | None:
         if inicio not in self.conexoes or destino not in self.conexoes:
             return None
         fila = deque([inicio])
@@ -166,31 +195,46 @@ class CentroOperacoesResgate:
         self.grafo.adicionar_via(a, b)
 
     def receber_chamado(self, codigo: str, local: str, gravidade: int, descricao: str, solicitante: str) -> None:
+        if not isinstance(codigo, str) or not codigo.strip():
+            raise ValueError("O código do chamado não pode ficar vazio.")
+        if self.tabela_hash.buscar(codigo) is not None:
+            raise ValueError(f"Já existe um chamado com o código {codigo}.")
+        if not isinstance(gravidade, int) or isinstance(gravidade, bool) or gravidade not in (1, 2, 3):
+            raise ValueError("A gravidade deve ser 1 (crítica), 2 (grave) ou 3 (estável).")
+        if not isinstance(local, str) or not local.strip():
+            raise ValueError("O local do chamado não pode ficar vazio.")
         self.contador += 1
         chamado = ChamadoResgate(codigo, local, gravidade, descricao, solicitante, self.contador)
         self.tabela_hash.inserir(codigo, chamado)
         self.heap.inserir((gravidade, chamado.ordem, codigo))
 
-    def despachar_proximo(self, base: str = "Base-Central"):
-        item = self.heap.extrair_min()
+    def despachar_proximo(self, base: str = "Base-Central") -> ChamadoResgate | None:
+        item = self.heap.consultar_min()
         if not item:
             print("⚠️ Nenhum chamado pendente.")
             return None
 
-        gravidade, ordem, codigo = item
+        gravidade, _, codigo = item
         chamado = self.tabela_hash.buscar(codigo)
+        if chamado is None:
+            raise RuntimeError(f"O chamado {codigo} não foi encontrado na tabela de consulta.")
         rota = self.grafo.bfs(base, chamado.local)
+        if rota is None:
+            print(f"⚠️ Sem rota entre {base} e {chamado.local}; o chamado {codigo} permanece na fila.")
+            return None
+
+        self.heap.extrair_min()
         self.pilha.empilhar(chamado)
 
         labels = {1: "🔴 CRÍTICO", 2: "🟡 GRAVE", 3: "🟢 ESTÁVEL"}
-        str_rota = " ➔ ".join(rota) if rota else "Sem rota"
+        str_rota = " ➔ ".join(rota)
 
         print(f"🚑 [DESPACHO] {chamado.codigo} | {labels.get(gravidade, 'NÍVEL ' + str(gravidade))} | Solicitante: {chamado.solicitante}")
         print(f"   Situação: {chamado.descricao} | Destino: {chamado.local}")
         print(f"   Rota Tática: {str_rota}\n" + "-" * 55)
         return chamado
 
-    def abortar_ultimo_despacho(self):
+    def abortar_ultimo_despacho(self) -> ChamadoResgate | None:
         chamado = self.pilha.desempilhar()
         if not chamado:
             print("❌ Nenhum despacho recente para abortar.")
@@ -202,7 +246,8 @@ class CentroOperacoesResgate:
 
 
 # DEMONSTRAÇÃO DO SISTEMA
-if __name__ == "__main__":
+def main() -> None:
+    sys.stdout.reconfigure(encoding="utf-8")
     print("=" * 60)
     print("   RESCUEROUTE — SISTEMA TÁTICO DE RESGATE (DEFESA CIVIL)")
     print("=" * 60 + "\n")
@@ -246,3 +291,7 @@ if __name__ == "__main__":
     print("🏆 PROVA CONCLUÍDA: O chamado mais urgente (RESG-999) saiu primeiro,")
     print("   e a Pilha LIFO permitiu desfazer o último despacho com sucesso.")
     print("=" * 60)
+
+
+if __name__ == "__main__":
+    main()
