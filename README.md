@@ -45,12 +45,12 @@ O sistema resolve quatro desafios centrais de armazenagem e e-commerce:
 
 ```mermaid
 flowchart TD
-    A[Terminal CLI / Menu Interativo] --> B[GerenciadorEstoque - Camada de Serviços]
-    B --> C[TabelaHash - Busca SKU O(1)]
-    B --> D[MinHeap - Prioridade Pedidos O(log n)]
-    B --> E[Grafo - Rotas de Coleta BFS O(V+E)]
-    B --> F[PilhaOperacoes - Desfazer Operações O(1)]
-    B --> G[(SQLite - Persistência Relacional)]
+    A["Terminal CLI / Menu Interativo"] --> B["GerenciadorEstoque - Camada de Serviços"]
+    B --> C["TabelaHash - Busca por SKU - O(1) médio"]
+    B --> D["MinHeap - Prioridade de Pedidos - O(log n)"]
+    B --> E["Grafo - Rotas de Coleta BFS - O(V + E)"]
+    B --> F["PilhaOperacoes - Desfazer Operações - O(1)"]
+    B --> G[("SQLite - Persistência Relacional")]
 ```
 
 ---
