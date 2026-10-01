@@ -1,16 +1,18 @@
-"""Compatibilidade com o nome de arquivo usado nas primeiras versões."""
+"""Ponto de entrada para compatibilidade com o script original."""
 
 from rescueroute import (
-    CentroOperacoesResgate,
-    ChamadoResgate,
+    GerenciadorEstoque,
     Grafo,
+    ItemPedido,
     MinHeap,
+    Movimentacao,
     NoPilha,
-    PilhaDespacho,
+    Peca,
+    Pedido,
+    PilhaOperacoes,
     TabelaHash,
     main,
 )
-
 
 if __name__ == "__main__":
     main()
