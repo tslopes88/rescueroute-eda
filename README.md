@@ -1,59 +1,48 @@
-# 🚑 RescueRoute
+# 🚑 Simulação de Despacho para Atendimento de Emergências
 
-### Uma simulação simples de atendimento a chamados de resgate
+Este projeto foi desenvolvido como trabalho final da disciplina de **Estruturas de Dados e Algoritmos**. O objetivo é aplicar estruturas fundamentais na triagem de ocorrências e na busca de rotas entre pontos de um mapa fictício. A aplicação roda no terminal e tem propósito exclusivamente didático.
 
-Este projeto nasceu como meu trabalho final de **Estruturas de Dados e Algoritmos**. A ideia é mostrar, na prática, como algumas estruturas ajudam a organizar chamados e encontrar caminhos entre locais.
+## 🧭 Funcionamento
 
-Tudo roda no terminal e usa informações inventadas. É um projeto para aprender — **não é um sistema real de emergência**.
+1. Cada chamado é registrado com identificador, local e nível de gravidade.
+2. A fila de prioridade organiza os atendimentos pela urgência. Em caso de empate, vale a ordem de chegada.
+3. O sistema calcula uma rota entre a base de atendimento e o local do chamado.
+4. Se o último despacho for cancelado, a ocorrência retorna à fila com sua prioridade original.
+5. Se não houver rota até o destino, o chamado permanece na fila aguardando a liberação de um caminho.
 
-## 🧭 Como funciona?
+## 🧰 Estruturas de dados utilizadas
 
-1. Um chamado chega com um local e um nível de gravidade.
-2. O sistema coloca os mais urgentes na frente. Se dois têm a mesma gravidade, vale quem chegou primeiro.
-3. A simulação procura um caminho entre a base e o chamado.
-4. Se um despacho for cancelado, o chamado volta para a fila mantendo sua prioridade.
+- **Tabela hash** 🔎 — armazena os chamados e permite buscá-los pelo código. A consulta tem custo médio O(1), mas pode chegar a O(n) no pior caso, quando há muitas colisões.
+- **Min-heap (fila de prioridade)** 🚨 — organiza os atendimentos pela gravidade e pela ordem de chegada.
+- **Grafo e busca em largura (BFS)** 🗺️ — representa as conexões entre os locais e encontra uma rota com o menor número de trechos.
+- **Pilha (LIFO)** ↩️ — registra os despachos e permite cancelar o mais recente.
 
-Se ainda não houver caminho até um local, o chamado não se perde: continua aguardando na fila.
+As estruturas foram implementadas no próprio código, sem pacotes externos, para praticar os conceitos estudados na disciplina.
 
-## 🧰 As estruturas por trás do projeto
+## ▶️ Execução
 
-- **Tabela hash** 🔎 — ajuda a encontrar um chamado pelo código.
-- **Min-heap** 🚨 — organiza a fila pela gravidade e pela ordem de chegada.
-- **Grafo + busca em largura (BFS)** 🗺️ — representa as ligações entre locais e encontra um caminho com menos trechos.
-- **Pilha** ↩️ — guarda os despachos mais recentes para permitir o cancelamento do último.
+O projeto requer **Python 3.10 ou superior** e usa apenas a biblioteca padrão.
 
-Essas estruturas foram implementadas no próprio projeto para praticar o conteúdo da disciplina. Em resumo, a tabela hash facilita consultas, a heap mantém a prioridade, o grafo representa o mapa e a pilha segue a regra “o último a entrar é o primeiro a sair”.
-
-## ▶️ Quer executar?
-
-Você precisa do **Python 3.10 ou mais recente**. Não é necessário instalar bibliotecas extras.
+Para iniciar a aplicação:
 
 ```bash
 python rescueroute.py
 ```
 
-O nome antigo também continua funcionando:
+O script antigo `simulador_logistica.py` também continua funcionando.
 
-```bash
-python simulador_logistica.py
-```
+### 🧪 Testes automatizados
 
-## 🧪 Testes
-
-Para rodar as verificações do projeto:
+Os testes verificam a prioridade dos chamados, mapas sem rota, colisões na tabela hash e o cancelamento de despachos. Para executá-los:
 
 ```bash
 python -m unittest discover -v
 ```
 
-Os testes conferem, por exemplo, a prioridade dos chamados, caminhos disponíveis ou não, colisões na tabela hash e o cancelamento do último despacho.
+## 💡 Limitações do modelo de rotas
 
-## 💡 Um detalhe importante sobre as rotas
+O mapa é simplificado e não atribui pesos às conexões, como distância ou tempo de deslocamento. Por isso, a BFS encontra o trajeto com menos trechos, que não é necessariamente o mais rápido ou o mais curto na cidade real. A simulação também não considera trânsito, limites de velocidade ou disponibilidade de viaturas.
 
-A demonstração usa um mapa pequeno, com trechos sem distância ou tempo definidos. Por isso, a BFS encontra o caminho com **menos ligações**, não necessariamente o mais rápido ou curto na vida real. O mapa também não representa trânsito, equipes disponíveis ou situações reais de emergência.
+**Autor:** Thiago da Silva Lopes
 
-## 👨‍🎓 Sobre o trabalho
-
-Projeto final de **Estruturas de Dados e Algoritmos (EDA)**, desenvolvido por **Thiago da Silva Lopes**.
-
-📚 Consulte também a documentação oficial do Python sobre [heap](https://docs.python.org/3/library/heapq.html), [filas](https://docs.python.org/3/library/collections.html#collections.deque) e [testes](https://docs.python.org/3/library/unittest.html).
+**Contexto:** Projeto final de Estruturas de Dados e Algoritmos (EDA)
