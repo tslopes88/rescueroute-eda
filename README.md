@@ -1,5 +1,9 @@
 # 📦 TecLogística — Sistema de Gestão de Estoque e Expedição
 
+> 🖥️ **Do cadastro à expedição:** uma simulação prática de logística para peças de computador.
+>
+> 🔎 Encontre peças · 🚦 Priorize pedidos · 🗺️ Planeje rotas · 📦 Controle o estoque
+
 - 🎓 **Trabalho:** Projeto final de Estruturas de Dados e Algoritmos (EDA)
 - 👨‍💻 **Autor:** Thiago da Silva Lopes
 - 🐍 **Linguagem:** Python 3.10 ou superior
@@ -9,16 +13,18 @@
 
 ## 👋 1. Visão Geral
 
-O **TecLogística** é uma simulação em linha de comando de um pequeno centro de distribuição de peças de computador. Pelo menu, é possível cadastrar produtos, acompanhar o estoque, separar pedidos e registrar vendas. O projeto é acadêmico: não foi pensado para controlar uma operação comercial real.
+O **TecLogística** é uma simulação em linha de comando de um pequeno centro de distribuição de peças de computador. Pelo menu, dá para cadastrar produtos, acompanhar o estoque, separar pedidos e registrar vendas.
 
-💡 A ideia é mostrar, na prática, como as estruturas de dados estudadas em EDA podem ajudar nessas tarefas:
+🎓 **É um projeto acadêmico**, criado para praticar estruturas de dados — não para controlar uma operação comercial real.
+
+💡 A ideia é mostrar como essas estruturas ajudam no dia a dia do sistema:
 
 1. 🔎 **Busca por SKU:** A tabela hash localiza uma peça pelo código, em tempo médio $O(1)$.
 2. 🚦 **Ordem dos pedidos:** A fila de prioridades atende primeiro os pedidos mais urgentes; em caso de empate, vale a ordem de chegada.
 3. 🗺️ **Caminho no depósito:** O grafo representa corredores e setores. A busca em largura (BFS) encontra um caminho com o menor número de trechos, em $O(V + E)$.
 4. ↩️ **Desfazer movimentações:** A pilha mantém entradas e ajustes recentes para que a última operação possa ser desfeita, em $O(1)$.
 
-> ℹ️ **Um detalhe sobre as rotas:** cada trecho do mapa tem o mesmo custo. Por isso, a BFS encontra o caminho com menos trechos — não necessariamente o mais curto em metros ou o mais rápido.
+> 🧭 **Sobre as rotas:** cada trecho do mapa tem o mesmo custo. A BFS encontra o caminho com menos trechos, não necessariamente o mais curto em metros ou o mais rápido.
 
 ---
 
@@ -31,14 +37,14 @@ O **TecLogística** é uma simulação em linha de comando de um pequeno centro 
 | **`Grafo`** | Mapeamento dos setores e corredores do galpão | $O(V + E)$ | Representado por Lista de Adjacência. O algoritmo de Busca em Largura (BFS) determina o caminho com menor número de conexões entre a Expedição e a peça. |
 | **`PilhaOperacoes`** | Desfazer entradas e ajustes de estoque | $O(1)$ | Pilha LIFO encadeada por nós. A última operação registrada é a primeira que pode ser desfeita. |
 
-### 🛒 Um pedido do começo ao fim
+### 🛒 Pedido em 4 passos
 
-1. Cadastre as peças que farão parte do pedido.
-2. Crie o pedido e informe sua urgência e os itens desejados.
-3. Separe o pedido: o sistema verifica o saldo disponível, reserva as peças e calcula as rotas no depósito.
-4. Expedir o pedido dá baixa nas unidades reservadas e registra a venda.
+1. 🧰 Cadastre as peças que farão parte do pedido.
+2. 📝 Crie o pedido e informe a urgência e os itens.
+3. 🗺️ Separe o pedido: o sistema confere o estoque, reserva as peças e calcula as rotas.
+4. 🚚 Faça a expedição: o sistema dá baixa nas unidades e registra a venda.
 
-✅ Pronto! O estoque e o registro da venda ficam atualizados juntos.
+✅ **Pronto!** O estoque e a venda ficam atualizados juntos.
 
 ---
 
@@ -80,15 +86,17 @@ Projeto_Final/
 - Nenhuma biblioteca extra: o projeto usa recursos que já vêm com o Python.
 
 ### ▶️ Abrir o sistema
-No terminal, dentro da pasta do projeto, rode:
+Abra o terminal na pasta do projeto e rode:
 
 ```bash
 python teclogistica.py
 ```
 
 ### 🧪 Rodar os testes
-Os testes conferem as estruturas de dados, as regras do sistema e o que acontece em situações de erro. Para executá-los:
+Os testes conferem as estruturas, as regras do sistema e alguns cenários de erro. Para executá-los:
 
 ```bash
 python -m unittest discover -v
 ```
+
+✨ **Bom estudo e boas expedições!**
