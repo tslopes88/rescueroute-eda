@@ -3,7 +3,7 @@ Estruturas de Dados desenvolvidas do zero para a disciplina de EDA.
 
 Implementações inclusas:
 1. TabelaHash com Encadeamento e Redimensionamento Dinâmico (Chaining) - O(1) médio
-2. MinHeap Binária em Array com Desempate FIFO (Fila de Prioridade) - O(log n)
+2. MinHeap Binária em Array para Pedidos com Desempate FIFO - O(log n)
 3. Grafo por Lista de Adjacência e Busca em Largura (BFS) - O(V + E)
 4. Pilha LIFO Encadeada por Nós (Histórico de Desfazer Operações) - O(1)
 """
@@ -99,7 +99,7 @@ class TabelaHash:
 
 class MinHeap:
     """
-    Min-Heap binária em Array representando a Fila de Prioridades de Separação/Reposição.
+    Min-Heap binária em array que organiza a fila de separação de pedidos.
 
     Formato dos elementos: (prioridade, ordem_chegada, payload)
       - O menor valor de prioridade possui maior urgência (ex: 1 = Urgência Alta).

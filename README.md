@@ -1,93 +1,92 @@
-# 🚚 TechDepot Logistics — Sistema Tático de Logística e Estoque de Hardware
+# TecLogística — Sistema de Gestão de Estoque e Expedição
 
-> **Projeto Final Integrado (PBL)** — Disciplina de Estruturas de Dados e Algoritmos (EDA)
-> **Autor:** Thiago da Silva Lopes
-> **Ambiente:** Python 3.10+ (Biblioteca Padrão) | SQLite3 Relacional | 0 Dependências Externas
+- **Trabalho:** Projeto final de Estruturas de Dados e Algoritmos (EDA)
+- **Autor:** Thiago da Silva Lopes
+- **Linguagem:** Python 3.10 ou superior
+- **Banco de dados:** SQLite3
 
 ---
+
+## 1. Visão Geral
+
+O **TecLogística** é uma simulação em linha de comando de um pequeno centro de distribuição de peças de computador. Pelo menu, é possível cadastrar produtos, acompanhar o estoque, separar pedidos e registrar vendas. O projeto é acadêmico: não foi pensado para controlar uma operação comercial real.
+
+O objetivo principal é mostrar como as estruturas de dados estudadas em EDA podem ajudar nessas tarefas:
+
+1. **Busca por SKU:** A tabela hash localiza uma peça pelo código, em tempo médio $O(1)$.
+2. **Ordem dos pedidos:** A fila de prioridades atende primeiro os pedidos mais urgentes; em caso de empate, vale a ordem de chegada.
+3. **Caminho no depósito:** O grafo representa corredores e setores. A busca em largura (BFS) encontra um caminho com o menor número de trechos, em $O(V + E)$.
+4. **Desfazer movimentações:** A pilha mantém entradas e ajustes recentes para que a última operação possa ser desfeita, em $O(1)$.
+
+O mapa considera que cada trecho entre dois setores tem o mesmo custo. Por isso, a BFS encontra o caminho com menos trechos, não necessariamente o mais curto em metros ou o mais rápido.
+
+---
+
+## 2. Estruturas de Dados Implementadas
+
+| Estrutura | Aplicação no Sistema | Complexidade | Detalhes de Implementação |
+| :--- | :--- | :--- | :--- |
+| **`TabelaHash`** | Catálogo de peças indexadas por SKU | $O(1)$ médio | Implementada do zero com encadeamento separado (*chaining*) para tratamento de colisões e redimensionamento dinâmico ao ultrapassar o fator de carga de 0,75. |
+| **`MinHeap`** | Fila de prioridades para separação de pedidos | $O(\log n)$ | Min-Heap binária representada sobre vetor. O menor valor numérico indica maior prioridade (1 = Alta, 2 = Média, 3 = Baixa). Desempate por FIFO mantendo a ordem de inserção. |
+| **`Grafo`** | Mapeamento dos setores e corredores do galpão | $O(V + E)$ | Representado por Lista de Adjacência. O algoritmo de Busca em Largura (BFS) determina o caminho com menor número de conexões entre a Expedição e a peça. |
+| **`PilhaOperacoes`** | Desfazer entradas e ajustes de estoque | $O(1)$ | Pilha LIFO encadeada por nós. A última operação registrada é a primeira que pode ser desfeita. |
+
+### Um pedido do começo ao fim
+
+1. Cadastre as peças que farão parte do pedido.
+2. Crie o pedido e informe sua urgência e os itens desejados.
+3. Separe o pedido: o sistema verifica o saldo disponível, reserva as peças e calcula as rotas no depósito.
+4. Expedir o pedido dá baixa nas unidades reservadas e registra a venda.
+
+---
+
+## 3. Arquitetura e Organização do Código
 
 ```text
-  ████████╗███████╗██╗  ██╗██████╗ ███████╗██████╗  ██████╗ ████████╗
-  ╚══██╔══╝██╔════╝██║  ██║██╔══██╗██╔════╝██╔══██╗██╔═══██╗╚══██╔══╝
-     ██║   █████╗  ███████║██║  ██║█████╗  ██████╔╝██║   ██║   ██║   
-     ██║   ██╔══╝  ██╔══██║██║  ██║██╔══╝  ██╔═══╝ ██║   ██║   ██║   
-     ██║   ███████╗██║  ██║██████╔╝███████╗██║     ╚██████╔╝   ██║   
-     ╚═╝   ╚══════╝╚═╝  ╚═╝╚═════╝ ╚══════╝╚═╝      ╚═════╝    ╚═╝   
-       LOGISTICS — SISTEMA TÁTICO DE ESTOQUE E EXPEDIÇÃO DE HARDWARE
+Projeto_Final/
+├── teclogistica.py          # Ponto de entrada principal da aplicação
+├── cli.py                   # Interface de usuário via terminal e menus
+├── servicos.py              # Camada de serviços e regras de negócio
+├── banco.py                 # Persistência e transações relacionais em SQLite
+├── estruturas.py            # Implementação manual das 4 estruturas de dados
+├── modelos.py               # Classes de domínio (Peca, Pedido, Venda, Movimentacao)
+├── rescueroute.py           # Ponto de entrada secundário (compatibilidade)
+├── simulador_logistica.py   # Ponto de entrada secundário (compatibilidade)
+└── tests/                   # Suíte de testes unitários e de integração
+    ├── test_estoque.py
+    ├── test_rescueroute.py
+    └── test_teclogistica.py
 ```
 
 ---
 
-## 📌 1. Visão Geral do Projeto
+## 4. Funcionalidades Principais
 
-O **TechDepot Logistics** é uma solução completa de terminal CLI desenvolvida do zero para simular um centro de distribuição e logística de peças de computador.
-
-O sistema resolve quatro desafios centrais de armazenagem e e-commerce:
-1. **Indexação e Busca Instantânea:** Acesso a peças por SKU em tempo constante $O(1)$.
-2. **Despacho Prioritário por Urgência:** Fila de prioridades com desempate FIFO para separação de pedidos em $O(\log n)$.
-3. **Rotas Otimizadas no Depósito:** Cálculo do menor trajeto entre a Expedição e os corredores via **Busca em Largura (BFS)** em Grafos $O(V + E)$.
-4. **Rastreabilidade e Reversão (Undo):** Pilha encadeada $O(1)$ para auditoria e reversão de lançamentos incorretos.
-
----
-
-## 🧰 2. As 4 Estruturas de Dados Fundamentais (Desenvolvidas do Zero)
-
-| Estrutura | Aplicação no Sistema | Complexidade | Funcionamento Interno |
-| :--- | :--- | :--- | :--- |
-| **`TabelaHash`** | Catálogo de peças indexadas por SKU | $O(1)$ médio | Tratamento de colisões por encadeamento (*chaining*) e redimensionamento automático de capacidade quando o fator de carga ultrapassa 0.75. |
-| **`MinHeap`** | Fila de prioridades de separação de pedidos | $O(\log n)$ | Min-Heap binária armazenada em vetor. O menor valor numérico representa maior urgência, e a ordem de chegada desempata em caso de empate (FIFO). |
-| **`Grafo`** | Layout de corredores e setores do depósito | $O(V + E)$ | Representação por Lista de Adjacência. Executa a Busca em Largura (BFS) para determinar o menor caminho em número de saltos entre setores. |
-| **`PilhaOperacoes`** | Histórico e mecanismo de desfazer (Undo) | $O(1)$ | Pilha LIFO encadeada por Nós (`NoPilha`) para reverter entradas e ajustes com consistência e registro na trilha de auditoria. |
+- **Painel de Indicadores (Dashboard):** Consulta consolidada de total de SKUs, unidades físicas em estoque, total reservado, patrimônio estocado e faturamento.
+- **Catálogo de Peças:** Cadastro, consulta direta por SKU em $O(1)$, pesquisa por nome/categoria e ordenação alfabética (A-Z).
+- **Movimentação de Estoque:** Registro de entradas (recebimento), ajustes de estoque (ganhos/perdas) e funcionalidade de desfazer a última ação (*undo*).
+- **Gestão de Pedidos:** A separação reserva o estoque e calcula as rotas de coleta. Na expedição, a baixa, o histórico e a venda são gravados juntos.
+- **Gestão de Vendas:** Registro de vendas diretas (PDV) e relatórios com ranking dos produtos mais vendidos.
+- **Controle Financeiro:** Todos os valores monetários são calculados e armazenados em centavos (números inteiros) para evitar imprecisões de ponto flutuante.
 
 ---
 
-## 🏗️ 3. Diagrama do Fluxo de Dados e Arquitetura
+## 5. Instruções de Execução
 
-```mermaid
-flowchart TD
-    A["Terminal CLI / Menu Interativo"] --> B["GerenciadorEstoque - Camada de Serviços"]
-    B --> C["TabelaHash - Busca por SKU - O(1) médio"]
-    B --> D["MinHeap - Prioridade de Pedidos - O(log n)"]
-    B --> E["Grafo - Rotas de Coleta BFS - O(V + E)"]
-    B --> F["PilhaOperacoes - Desfazer Operações - O(1)"]
-    B --> G[("SQLite - Persistência Relacional")]
-```
+### Requisitos
+- Python 3.10 ou superior.
+- Não é necessária a instalação de dependências externas (utiliza apenas a biblioteca padrão do Python).
 
----
+### Executar a Aplicação
+No terminal, na pasta raiz do projeto:
 
-## 🚀 4. Principais Funcionalidades
-
-- **📊 Dashboard de Indicadores em Tempo Real:** Painel consolidado com total de SKUs, unidades físicas, patrimônio total em Reais (R$), itens críticos e métricas de expedição.
-- **🔤 Procura e Ordenação Alfabética (A-Z):** Consulta dinâmica por ordenação alfabética por Nome do Produto ou SKU.
-- **💰 Valores Monetários sem Ponto Flutuante:** Custo e preço armazenados como inteiros em centavos para eliminar erros de precisão decimal.
-- **🛡️ Validações Estritas:** Impede duplicidade de SKU, saldo negativo de estoque e separações de pedidos com itens inalcançáveis no depósito.
-- **🔄 Carga Demonstrativa Opcional:** Função para incluir 17 produtos de exemplo; não altera SKUs já cadastrados. O arquivo `estoque.db` incluído no repositório já vem com um catálogo demonstrativo.
-
----
-
-## 💻 5. Instruções de Execução
-
-### Pré-requisitos
-- **Python 3.10 ou superior**.
-- Nenhuma instalação de biblioteca externa é necessária.
-
-### Executar a Aplicação (CLI)
-No terminal da pasta do projeto:
 ```bash
-python rescueroute.py
+python teclogistica.py
 ```
-*(Ou utilize o ponto de entrada secundário `python simulador_logistica.py`)*
 
-### Executar a Suíte de Testes Automatizados (28 Testes)
+### Executar os Testes Automatizados
+A suíte automatizada verifica as estruturas de dados, as regras de negócio e a persistência, incluindo situações de erro e reversão de operações. Para executá-la:
+
 ```bash
 python -m unittest discover -v
 ```
-
----
-
-## 📋 6. Exemplo de Ciclo de Vida de um Pedido
-
-1. **Criação:** Cliente solicita o Pedido `#PED-101` contendo `2x GPU-RTX-4060` com Urgência Alta (1).
-2. **MinHeap:** O pedido entra na posição de topo do MinHeap por conta de sua urgência máxima.
-3. **Separação & BFS:** O operador aciona "Separar Pedido". O sistema valida o saldo livre, gera a rota BFS (`EXPEDICAO` $\to$ `RECEBIMENTO` $\to$ `CORREDOR-A` $\to$ `SETOR-PLACAS`) e reserva o estoque.
-4. **Expedição:** Na expedição final, o estoque físico é baixado e a reserva é zerada de forma atômica no SQLite.

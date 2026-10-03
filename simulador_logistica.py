@@ -1,6 +1,6 @@
-"""Ponto de entrada para compatibilidade com o script original."""
+"""Ponto de entrada para compatibilidade com o sistema TecLogística."""
 
-from rescueroute import (
+from teclogistica import (
     GerenciadorEstoque,
     Grafo,
     ItemPedido,

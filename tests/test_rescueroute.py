@@ -1,9 +1,9 @@
 """
-Testes de regressão e compatibilidade para o sistema RescueRoute / Controle de Estoque.
+Testes de regressão e compatibilidade para o sistema TecLogística / Controle de Estoque.
 """
 
 import unittest
-from rescueroute import (
+from teclogistica import (
     GerenciadorEstoque,
     Grafo,
     MinHeap,
@@ -12,12 +12,14 @@ from rescueroute import (
     PilhaOperacoes,
     TabelaHash,
 )
-from simulador_logistica import MinHeap as MinHeapCompat
+from rescueroute import MinHeap as MinHeapRescueRoute
+from simulador_logistica import MinHeap as MinHeapSimulador
 
 
-class CompatibilityTests(unittest.TestCase):
-    def test_nome_antigo_reexporta_as_estruturas(self):
-        self.assertIs(MinHeapCompat, MinHeap)
+class TestesCompatibilidade(unittest.TestCase):
+    def test_reexportacao_modulos_compatibilidade(self):
+        self.assertIs(MinHeapRescueRoute, MinHeap)
+        self.assertIs(MinHeapSimulador, MinHeap)
 
     def test_instanciacao_estruturas_basicas(self):
         tabela = TabelaHash()

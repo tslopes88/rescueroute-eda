@@ -311,6 +311,81 @@ class GerenciadorEstoqueIntegrationTests(unittest.TestCase):
             self.gerenciador.separar_pedido("PED-DUP")
         self.assertEqual(self.gerenciador.buscar_peca_sku("RAM-8GB").estoque_reservado, 0)
 
+    def test_expedicao_de_pedido_gera_venda_faturada_automatica(self):
+        self.gerenciador.criar_pedido("PED-VND", "Cliente Venda", [("RAM-8GB", 4)])
+        self.gerenciador.separar_pedido("PED-VND")
+        self.gerenciador.expedir_pedido("PED-VND")
+
+        vendas = self.gerenciador.listar_vendas()
+        self.assertEqual(len(vendas), 1)
+        venda = vendas[0]
+        self.assertEqual(venda.id_venda, "VND-PED-VND")
+        self.assertEqual(venda.valor_total_centavos, 4 * 15000)
+
+    def test_falha_ao_gravar_venda_reverte_expedicao_completa(self):
+        self.gerenciador.criar_pedido("PED-ROLLBACK", "Cliente", [("RAM-8GB", 4)])
+        self.gerenciador.separar_pedido("PED-ROLLBACK")
+        with self.gerenciador.banco.get_conexao() as conn:
+            conn.execute(
+                """
+                CREATE TRIGGER falha_venda
+                BEFORE INSERT ON vendas
+                BEGIN
+                    SELECT RAISE(ABORT, 'falha de teste');
+                END;
+                """
+            )
+
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.gerenciador.expedir_pedido("PED-ROLLBACK")
+
+        pedido = self.gerenciador.consultar_pedido("PED-ROLLBACK")
+        peca = self.gerenciador.buscar_peca_sku("RAM-8GB")
+        self.assertEqual(pedido.status, "SEPARADO")
+        self.assertEqual(peca.estoque_atual, 20)
+        self.assertEqual(peca.estoque_reservado, 4)
+        self.assertEqual(len(self.gerenciador.listar_vendas()), 0)
+        self.assertEqual(
+            [mov.tipo for mov in self.gerenciador.listar_movimentacoes("RAM-8GB")],
+            ["RESERVA"],
+        )
+
+    def test_venda_direta_baixa_estoque_e_gera_faturamento(self):
+        venda = self.gerenciador.registrar_venda_direta("VND-DIRECT", "Cliente Balcão", [("RAM-8GB", 5)])
+        self.assertEqual(venda.valor_total_centavos, 5 * 15000)
+
+        peca = self.gerenciador.buscar_peca_sku("RAM-8GB")
+        self.assertEqual(peca.estoque_atual, 15)
+
+        rel = self.gerenciador.obter_relatorio_vendas()
+        self.assertEqual(rel["total_vendas"], 1)
+        self.assertEqual(rel["faturamento_total_formatado"], "R$ 750,00")
+
+    def test_falha_ao_gravar_venda_direta_nao_baixa_estoque(self):
+        with self.gerenciador.banco.get_conexao() as conn:
+            conn.execute(
+                """
+                CREATE TRIGGER falha_venda_direta
+                BEFORE INSERT ON vendas
+                BEGIN
+                    SELECT RAISE(ABORT, 'falha de teste');
+                END;
+                """
+            )
+
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.gerenciador.registrar_venda_direta(
+                "VND-FALHA",
+                "Cliente",
+                [("RAM-8GB", 5)],
+            )
+
+        peca = self.gerenciador.buscar_peca_sku("RAM-8GB")
+        self.assertEqual(peca.estoque_atual, 20)
+        self.assertEqual(self.gerenciador.listar_movimentacoes("RAM-8GB"), [])
+        self.assertEqual(self.gerenciador.listar_vendas(), [])
+
+
 
 class EntradaCLItests(unittest.TestCase):
     def test_conversao_monetaria_brasileira_e_com_ponto(self):

@@ -10,7 +10,7 @@ Integra o banco de dados SQLite com as estruturas de dados customizadas em memó
 
 from banco import BancoDados
 from estruturas import AcaoReversivel, Grafo, MinHeap, PilhaOperacoes, TabelaHash
-from modelos import ItemPedido, Movimentacao, Peca, Pedido
+from modelos import ItemPedido, ItemVenda, Movimentacao, Peca, Pedido, Venda
 
 
 class GerenciadorEstoque:
@@ -23,10 +23,15 @@ class GerenciadorEstoque:
         self.tabela_hash = TabelaHash()
         self.heap_pedidos = MinHeap()
         self.grafo_deposito = Grafo()
-        self.pilha_undo = PilhaOperacoes()
+        self.pilha_desfazer = PilhaOperacoes()
         self.contador_ordem_pedidos = 0
 
         self.carregar_dados()
+
+    @property
+    def pilha_undo(self) -> PilhaOperacoes:
+        """Propriedade de compatibilidade para a pilha de desfazer."""
+        return self.pilha_desfazer
 
     @staticmethod
     def _copiar_peca(peca: Peca, **alteracoes: int | str) -> Peca:
@@ -191,7 +196,7 @@ class GerenciadorEstoque:
 
     def obter_resumo_estatistico(self) -> dict:
         """
-        Gera um relatório consolidado com indicadores estratégicos de desempenho do depósito.
+        Gera um relatório consolidado com indicadores estratégicos de desempenho do depósito e faturamento.
         """
         pecas = self.listar_pecas()
         total_skus = len(pecas)
@@ -211,6 +216,12 @@ class GerenciadorEstoque:
         pedidos_separados = [p for p in pedidos if p.status == "SEPARADO"]
         pedidos_expedidos = [p for p in pedidos if p.status == "EXPEDIDO"]
 
+        vendas = self.banco.carregar_vendas()
+        faturamento_total_centavos = sum(v.valor_total_centavos for v in vendas)
+        f_reais, f_centavos = divmod(faturamento_total_centavos, 100)
+        f_reais_fmt = f"{f_reais:,}".replace(",", ".")
+        faturamento_formatado = f"R$ {f_reais_fmt},{f_centavos:02d}"
+
         return {
             "total_skus": total_skus,
             "total_unidades_fisicas": total_unidades_fisicas,
@@ -222,6 +233,8 @@ class GerenciadorEstoque:
             "qtd_pedidos_separados": len(pedidos_separados),
             "qtd_pedidos_expedidos": len(pedidos_expedidos),
             "setores_cadastrados": len(self.grafo_deposito.conexoes),
+            "qtd_vendas_realizadas": len(vendas),
+            "faturamento_total_formatado": faturamento_formatado,
         }
 
     # --- GESTÃO DE ESTOQUE E RASTREABILIDADE ---
@@ -240,7 +253,7 @@ class GerenciadorEstoque:
         self.tabela_hash.inserir(atualizada.sku, atualizada)
 
         # Empilha ação reversível para permitir desfazer
-        self.pilha_undo.empilhar(AcaoReversivel("ENTRADA", peca.sku, quantidade, observacao))
+        self.pilha_desfazer.empilhar(AcaoReversivel("ENTRADA", peca.sku, quantidade, observacao))
 
         return atualizada
 
@@ -274,7 +287,7 @@ class GerenciadorEstoque:
         self.tabela_hash.inserir(atualizada.sku, atualizada)
 
         # Empilha ação reversível
-        self.pilha_undo.empilhar(AcaoReversivel("AJUSTE", peca.sku, quantidade_ajuste, observacao))
+        self.pilha_desfazer.empilhar(AcaoReversivel("AJUSTE", peca.sku, quantidade_ajuste, observacao))
 
         return atualizada
 
@@ -293,7 +306,7 @@ class GerenciadorEstoque:
         """
         Desfaz a última operação de estoque reversível (ENTRADA ou AJUSTE) mantendo a consistência do banco.
         """
-        acao = self.pilha_undo.espiar()
+        acao = self.pilha_desfazer.espiar()
         if not acao:
             raise ValueError("Não há nenhuma operação reversível no histórico para desfazer.")
 
@@ -325,7 +338,7 @@ class GerenciadorEstoque:
         mov = Movimentacao(None, peca.sku, abs(acao.quantidade), mov_tipo, f"[DESFAZER] Reversão da ação de {acao.tipo_acao}")
         atualizada = self._copiar_peca(peca, estoque_atual=novo_estoque)
         self.banco.salvar_operacao_estoque([atualizada], [mov])
-        self.pilha_undo.desempilhar()
+        self.pilha_desfazer.desempilhar()
         self.tabela_hash.inserir(atualizada.sku, atualizada)
 
         return msg
@@ -475,12 +488,14 @@ class GerenciadorEstoque:
 
         pecas_atualizadas: dict[str, Peca] = {}
         movimentacoes: list[Movimentacao] = []
+        precos_por_sku: dict[str, int] = {}
         for item in pedido.itens:
             peca = self.buscar_peca_sku(item.sku)
             if peca is None:
                 raise RuntimeError(f"A peça '{item.sku}' do pedido não existe no catálogo.")
             if peca.estoque_reservado < item.quantidade or peca.estoque_atual < item.quantidade:
                 raise RuntimeError(f"A reserva da peça '{item.sku}' está inconsistente.")
+            precos_por_sku[peca.sku] = peca.preco_centavos
             pecas_atualizadas[peca.sku] = self._copiar_peca(
                 peca,
                 estoque_atual=peca.estoque_atual - item.quantidade,
@@ -496,14 +511,32 @@ class GerenciadorEstoque:
                 )
             )
 
+        # A venda e a expedição são gravadas juntas para evitar baixa sem faturamento.
+        itens_venda = [
+            ItemVenda(
+                item.sku,
+                item.quantidade,
+                precos_por_sku[item.sku],
+            )
+            for item in pedido.itens
+        ]
+        venda_id = f"VND-{pedido.id_pedido}"
+        venda = Venda(
+            id_venda=venda_id,
+            cliente=pedido.cliente,
+            itens=itens_venda,
+            id_pedido_origem=pedido.id_pedido,
+        )
         pedido.status = "EXPEDIDO"
         self.banco.salvar_operacao_estoque(
             list(pecas_atualizadas.values()),
             movimentacoes,
             pedido,
+            venda,
         )
         for peca in pecas_atualizadas.values():
             self.tabela_hash.inserir(peca.sku, peca)
+
         return pedido
 
     def cancelar_pedido(self, id_pedido: str) -> Pedido:
@@ -551,3 +584,109 @@ class GerenciadorEstoque:
             self.tabela_hash.inserir(peca.sku, peca)
         self.carregar_dados()
         return pedido
+
+    # --- GESTÃO DE VENDAS E FATURAMENTO ---
+
+    def registrar_venda_direta(
+        self,
+        id_venda: str,
+        cliente: str,
+        itens: list[tuple[str, int]],
+    ) -> Venda:
+        """
+        Registra uma venda direta no balcão/PDV:
+          1. Valida se há estoque físico disponível para todas as peças.
+          2. Baixa imediatamente o estoque físico e registra movimentação SAIDA.
+          3. Salva a Venda com subtotal e total faturado.
+        """
+        if not isinstance(id_venda, str) or not id_venda.strip():
+            raise ValueError("O ID da venda não pode ser vazio.")
+        vid = id_venda.strip().upper()
+
+        vendas_existentes = self.banco.carregar_vendas()
+        if any(v.id_venda == vid for v in vendas_existentes):
+            raise ValueError(f"Já existe uma venda registrada com o ID '{vid}'.")
+
+        # 1. Validação de estoque físico livre
+        quantidades: dict[str, int] = {}
+        for sku, qtd in itens:
+            peca = self.buscar_peca_sku(sku)
+            if not peca:
+                raise ValueError(f"Peça SKU '{sku}' não encontrada no catálogo.")
+            if not isinstance(qtd, int) or isinstance(qtd, bool) or qtd <= 0:
+                raise ValueError(f"A quantidade da peça '{peca.sku}' deve ser positiva.")
+            quantidades[peca.sku] = quantidades.get(peca.sku, 0) + qtd
+
+        for sku, qtd in quantidades.items():
+            peca = self.buscar_peca_sku(sku)
+            if peca.estoque_disponivel < qtd:
+                raise ValueError(
+                    f"Estoque insuficiente para a peça '{sku}'. "
+                    f"Necessário: {qtd}, Disponível: {peca.estoque_disponivel}."
+                )
+
+        # 2. Baixa no estoque e gera movimentações
+        pecas_atualizadas: list[Peca] = []
+        movimentacoes: list[Movimentacao] = []
+        itens_venda: list[ItemVenda] = []
+
+        for sku, qtd in quantidades.items():
+            peca = self.buscar_peca_sku(sku)
+            atualizada = self._copiar_peca(peca, estoque_atual=peca.estoque_atual - qtd)
+            pecas_atualizadas.append(atualizada)
+            movimentacoes.append(
+                Movimentacao(None, peca.sku, qtd, "SAIDA", f"Venda Direta #{vid}")
+            )
+            itens_venda.append(ItemVenda(peca.sku, qtd, peca.preco_centavos))
+
+        venda = Venda(id_venda=vid, cliente=cliente, itens=itens_venda)
+
+        self.banco.salvar_operacao_estoque(pecas_atualizadas, movimentacoes, venda=venda)
+
+        for peca in pecas_atualizadas:
+            self.tabela_hash.inserir(peca.sku, peca)
+
+        return venda
+
+    def listar_vendas(self) -> list[Venda]:
+        """Retorna todas as vendas faturadas registradas."""
+        return self.banco.carregar_vendas()
+
+    def obter_relatorio_vendas(self) -> dict:
+        """
+        Gera relatório consolidado de faturamento, ticket médio e ranking de vendas.
+        """
+        vendas = self.listar_vendas()
+        total_vendas = len(vendas)
+        faturamento_total_centavos = sum(v.valor_total_centavos for v in vendas)
+
+        ticket_medio_centavos = faturamento_total_centavos // total_vendas if total_vendas > 0 else 0
+
+        # Formatação financeira
+        f_reais, f_centavos = divmod(faturamento_total_centavos, 100)
+        f_reais_fmt = f"{f_reais:,}".replace(",", ".")
+        faturamento_fmt = f"R$ {f_reais_fmt},{f_centavos:02d}"
+
+        t_reais, t_centavos = divmod(ticket_medio_centavos, 100)
+        t_reais_fmt = f"{t_reais:,}".replace(",", ".")
+        ticket_fmt = f"R$ {t_reais_fmt},{t_centavos:02d}"
+
+        # Consolidação de peças mais vendidas
+        vendas_por_sku: dict[str, dict] = {}
+        for v in vendas:
+            for item in v.itens:
+                if item.sku not in vendas_por_sku:
+                    vendas_por_sku[item.sku] = {"quantidade": 0, "faturamento_centavos": 0}
+                vendas_por_sku[item.sku]["quantidade"] += item.quantidade
+                vendas_por_sku[item.sku]["faturamento_centavos"] += item.subtotal_centavos
+
+        ranking_unidades = sorted(
+            vendas_por_sku.items(), key=lambda x: x[1]["quantidade"], reverse=True
+        )
+
+        return {
+            "total_vendas": total_vendas,
+            "faturamento_total_formatado": faturamento_fmt,
+            "ticket_medio_formatado": ticket_fmt,
+            "ranking_vendas_sku": ranking_unidades,
+        }

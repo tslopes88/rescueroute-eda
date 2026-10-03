@@ -172,3 +172,75 @@ class Pedido:
 
     def __repr__(self) -> str:
         return f"<Pedido {self.id_pedido} Cliente='{self.cliente}' Status={self.status} Urgência={self.urgencia}>"
+
+
+class ItemVenda:
+    """
+    Representa uma peça vendida com quantidade, preço unitário e subtotal em centavos.
+    """
+
+    def __init__(self, sku: str, quantidade: int, preco_unitario_centavos: int):
+        if not isinstance(sku, str) or not sku.strip():
+            raise ValueError("SKU do item vendido inválido.")
+        if not isinstance(quantidade, int) or isinstance(quantidade, bool) or quantidade <= 0:
+            raise ValueError("A quantidade vendida deve ser um número positivo.")
+        if not isinstance(preco_unitario_centavos, int) or isinstance(preco_unitario_centavos, bool) or preco_unitario_centavos < 0:
+            raise ValueError("O preço unitário em centavos deve ser não negativo.")
+
+        self.sku = sku.strip().upper()
+        self.quantidade = quantidade
+        self.preco_unitario_centavos = preco_unitario_centavos
+
+    @property
+    def subtotal_centavos(self) -> int:
+        """Calcula o valor subtotal do item vendido (quantidade x preço unitário)."""
+        return self.quantidade * self.preco_unitario_centavos
+
+    @property
+    def subtotal_formatado(self) -> str:
+        """Formata o subtotal em Reais (R$)."""
+        reais, centavos = divmod(self.subtotal_centavos, 100)
+        reais_formatados = f"{reais:,}".replace(",", ".")
+        return f"R$ {reais_formatados},{centavos:02d}"
+
+
+class Venda:
+    """
+    Representa uma venda faturada de peças (originada de pedido expedido ou venda direta).
+    """
+
+    def __init__(
+        self,
+        id_venda: str,
+        cliente: str,
+        itens: list[ItemVenda],
+        id_pedido_origem: str | None = None,
+        data_venda: str | None = None,
+    ):
+        if not isinstance(id_venda, str) or not id_venda.strip():
+            raise ValueError("O ID da venda não pode ser vazio.")
+        if not isinstance(cliente, str) or not cliente.strip():
+            raise ValueError("O cliente da venda não pode ser vazio.")
+        if not itens or len(itens) == 0:
+            raise ValueError("A venda deve conter pelo menos um item.")
+
+        self.id_venda = id_venda.strip().upper()
+        self.cliente = cliente.strip()
+        self.itens = itens
+        self.id_pedido_origem = id_pedido_origem.strip().upper() if id_pedido_origem else None
+        self.data_venda = data_venda or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    @property
+    def valor_total_centavos(self) -> int:
+        """Soma o valor total da venda em centavos."""
+        return sum(item.subtotal_centavos for item in self.itens)
+
+    @property
+    def valor_total_formatado(self) -> str:
+        """Formata o valor total da venda em Reais (R$)."""
+        reais, centavos = divmod(self.valor_total_centavos, 100)
+        reais_formatados = f"{reais:,}".replace(",", ".")
+        return f"R$ {reais_formatados},{centavos:02d}"
+
+    def __repr__(self) -> str:
+        return f"<Venda {self.id_venda} Cliente='{self.cliente}' Total={self.valor_total_formatado} Data={self.data_venda}>"

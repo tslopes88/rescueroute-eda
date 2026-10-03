@@ -9,7 +9,7 @@ from contextlib import contextmanager
 import sqlite3
 from typing import Generator
 
-from modelos import ItemPedido, Movimentacao, Peca, Pedido
+from modelos import ItemPedido, ItemVenda, Movimentacao, Peca, Pedido, Venda
 
 
 class BancoDados:
@@ -97,6 +97,31 @@ class BancoDados:
                     ponto_a TEXT NOT NULL,
                     ponto_b TEXT NOT NULL,
                     PRIMARY KEY (ponto_a, ponto_b)
+                );
+            """)
+
+            # Tabela de Vendas Faturadas
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS vendas (
+                    id_venda TEXT PRIMARY KEY,
+                    id_pedido_origem TEXT,
+                    cliente TEXT NOT NULL,
+                    valor_total_centavos INTEGER NOT NULL CHECK (valor_total_centavos >= 0),
+                    data_venda TEXT NOT NULL
+                );
+            """)
+
+            # Tabela de Itens de Venda
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS itens_venda (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    venda_id TEXT NOT NULL,
+                    sku TEXT NOT NULL,
+                    quantidade INTEGER NOT NULL CHECK (quantidade > 0),
+                    preco_unitario_centavos INTEGER NOT NULL CHECK (preco_unitario_centavos >= 0),
+                    subtotal_centavos INTEGER NOT NULL CHECK (subtotal_centavos >= 0),
+                    FOREIGN KEY (venda_id) REFERENCES vendas (id_venda) ON DELETE CASCADE,
+                    FOREIGN KEY (sku) REFERENCES pecas (sku)
                 );
             """)
 
@@ -196,8 +221,9 @@ class BancoDados:
         pecas: list[Peca],
         movimentacoes: list[Movimentacao],
         pedido: Pedido | None = None,
+        venda: Venda | None = None,
     ) -> None:
-        """Grava saldos, trilha e estado do pedido na mesma transação SQLite."""
+        """Grava estoque, histórico, pedido e venda na mesma transação SQLite."""
         with self.get_conexao() as conn:
             for peca in pecas:
                 self._salvar_peca_na_conexao(conn, peca)
@@ -205,6 +231,8 @@ class BancoDados:
                 self._registrar_movimentacao_na_conexao(conn, movimentacao)
             if pedido is not None:
                 self._salvar_pedido_na_conexao(conn, pedido)
+            if venda is not None:
+                self._salvar_venda_na_conexao(conn, venda)
 
     def carregar_todas_pecas(self) -> list[Peca]:
         """Carrega todas as peças do banco para reconstruir a Tabela Hash em memória."""
@@ -368,3 +396,75 @@ class BancoDados:
             cursor = conn.cursor()
             cursor.execute("SELECT ponto_a, ponto_b FROM vias_deposito;")
             return cursor.fetchall()
+
+    # --- OPERAÇÕES DE VENDAS ---
+
+    @staticmethod
+    def _salvar_venda_na_conexao(conn: sqlite3.Connection, venda: Venda) -> None:
+        """Insere uma venda e seus itens; IDs repetidos são rejeitados."""
+        conn.execute(
+            """
+            INSERT INTO vendas (id_venda, id_pedido_origem, cliente, valor_total_centavos, data_venda)
+            VALUES (?, ?, ?, ?, ?);
+            """,
+            (
+                venda.id_venda,
+                venda.id_pedido_origem,
+                venda.cliente,
+                venda.valor_total_centavos,
+                venda.data_venda,
+            ),
+        )
+        conn.executemany(
+            """
+            INSERT INTO itens_venda (
+                venda_id, sku, quantidade, preco_unitario_centavos, subtotal_centavos
+            ) VALUES (?, ?, ?, ?, ?);
+            """,
+            [
+                (
+                    venda.id_venda,
+                    item.sku,
+                    item.quantidade,
+                    item.preco_unitario_centavos,
+                    item.subtotal_centavos,
+                )
+                for item in venda.itens
+            ],
+        )
+
+    def salvar_venda(self, venda: Venda) -> None:
+        """Salva uma venda e seus itens em uma transação atômica."""
+        with self.get_conexao() as conn:
+            self._salvar_venda_na_conexao(conn, venda)
+
+    def carregar_vendas(self) -> list[Venda]:
+        """Carrega todas as vendas registradas com seus respectivos itens."""
+        with self.get_conexao() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT id_venda, id_pedido_origem, cliente, valor_total_centavos, data_venda FROM vendas ORDER BY data_venda DESC;"
+            )
+            linhas_vendas = cursor.fetchall()
+
+            vendas = []
+            for v in linhas_vendas:
+                vid, id_ped_origem, cliente, valor_total, data_venda = v
+                cursor.execute(
+                    "SELECT sku, quantidade, preco_unitario_centavos FROM itens_venda WHERE venda_id = ?;",
+                    (vid,),
+                )
+                itens = [
+                    ItemVenda(sku=sku_item, quantidade=qtd_item, preco_unitario_centavos=preco_item)
+                    for sku_item, qtd_item, preco_item in cursor.fetchall()
+                ]
+                vendas.append(
+                    Venda(
+                        id_venda=vid,
+                        cliente=cliente,
+                        itens=itens,
+                        id_pedido_origem=id_ped_origem,
+                        data_venda=data_venda,
+                    )
+                )
+            return vendas

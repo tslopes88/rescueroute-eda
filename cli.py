@@ -18,14 +18,14 @@ def ler_inteiro(
             valor_raw = input(mensagem).strip()
             valor = int(valor_raw)
             if minimo is not None and valor < minimo:
-                print(f"⚠️ O valor deve ser no mínimo {minimo}.")
+                print(f"[AVISO] O valor deve ser no mínimo {minimo}.")
                 continue
             if maximo is not None and valor > maximo:
-                print(f"⚠️ O valor deve ser no máximo {maximo}.")
+                print(f"[AVISO] O valor deve ser no máximo {maximo}.")
                 continue
             return valor
         except ValueError:
-            print("⚠️ Entrada inválida. Por favor, digite um número inteiro válido.")
+            print("[AVISO] Entrada inválida. Por favor, digite um número inteiro válido.")
 
 
 def ler_float_centavos(mensagem: str) -> int:
@@ -34,7 +34,7 @@ def ler_float_centavos(mensagem: str) -> int:
         try:
             return converter_reais_centavos(input(mensagem))
         except ValueError as err:
-            print(f"⚠️ {err}")
+            print(f"[AVISO] {err}")
 
 
 def converter_reais_centavos(texto: str) -> int:
@@ -57,7 +57,7 @@ def converter_reais_centavos(texto: str) -> int:
 
 class InterfaceCLI:
     """
-    Controlador do menu interativo do terminal.
+    Controlador do menu interativo no terminal.
     """
 
     def __init__(self, db_path: str = "estoque.db"):
@@ -66,47 +66,45 @@ class InterfaceCLI:
     def iniciar(self) -> None:
         """Inicia o loop principal do menu."""
 
-        banner_ascii = r"""
-  ████████╗███████╗██╗  ██╗██████╗ ███████╗██████╗  ██████╗ ████████╗
-  ╚══██╔══╝██╔════╝██║  ██║██╔══██╗██╔════╝██╔══██╗██╔═══██╗╚══██╔══╝
-     ██║   █████╗  ███████║██║  ██║█████╗  ██████╔╝██║   ██║   ██║   
-     ██║   ██╔══╝  ██╔══██║██║  ██║██╔══╝  ██╔═══╝ ██║   ██║   ██║   
-     ██║   ███████╗██║  ██║██████╔╝███████╗██║     ╚██████╔╝   ██║   
-     ╚═╝   ╚══════╝╚═╝  ╚═╝╚═════╝ ╚══════╝╚═╝      ╚═════╝    ╚═╝   
-       LOGISTICS — SISTEMA TÁTICO DE ESTOQUE E EXPEDIÇÃO DE HARDWARE
+        banner = """
+===================================================================
+                  TECLOGÍSTICA — SISTEMA DE ESTOQUE
+       Projeto Final da Disciplina de Estruturas de Dados (EDA)
+===================================================================
 """
-        print(banner_ascii)
-        print("╔" + "═" * 67 + "╗")
-        print("║  👉 BEM-VINDO AO TECHDEPOT LOGISTICS!                              ║")
-        print("║     DIGITE 1 A QUALQUER MOMENTO PARA O GUIA E PASSO A PASSO.       ║")
-        print("╚" + "═" * 67 + "╝")
+        print(banner)
+        print("+-----------------------------------------------------------------+")
+        print("|  BEM-VINDO AO TECLOGÍSTICA                                      |")
+        print("|  No menu principal, escolha 1 para abrir o Guia de Uso.         |")
+        print("+-----------------------------------------------------------------+")
 
         if not self.gerenciador.listar_pecas():
             print(
-                "\nℹ️ O catálogo está vazio. Cadastre suas peças ou use a opção 8 "
+                "\n[INFO] O catálogo está vazio. Cadastre peças ou use a opção 9 "
                 "para carregar itens de demonstração."
             )
 
-        ver_guia = input("\n👉 Deseja visualizar o PASSO A PASSO de uso agora? [S/n]: ").strip().lower()
+        ver_guia = input("\nDeseja visualizar o Guia de Uso agora? [S/n]: ").strip().lower()
         if ver_guia in ("", "s", "sim", "y", "1"):
             self.menu_tutorial()
 
         while True:
-            print("\n" + "=" * 69)
-            print("  💻 TECHDEPOT LOGISTICS — MENU PRINCIPAL DE GESTÃO DE HARDWARE")
-            print("=" * 69)
-            print("1. ❓ PASSO A PASSO E GUIA DE USO DO SISTEMA (TUTORIAL COMPLETO)")
-            print("2. 📊 Dashboard e Indicadores Gerais do Depósito (Visão Geral)")
-            print("3. 📦 Catálogo de Peças (Cadastrar, Consultar SKU, Pesquisar, A-Z)")
-            print("4. 📋 Gestão de Estoque (Entradas, Ajustes, Histórico e Desfazer)")
-            print("5. 📑 Gestão de Pedidos (Criar, Separar com Rota BFS, Expedir)")
-            print("6. 🗺️  Layout do Depósito e Rotas de Coleta")
-            print("7. ⚠️ Alertas e Relatório de Estoque Mínimo")
-            print("8. 🔄 Carregar Peças de Demonstração (opcional)")
-            print("0. 🚪 Sair")
-            print("-" * 69)
+            print("\n" + "=" * 67)
+            print("  TECLOGÍSTICA — MENU PRINCIPAL DE GESTÃO DE ESTOQUE E LOGÍSTICA")
+            print("=" * 67)
+            print("1. Guia de Uso e Passo a Passo do Sistema")
+            print("2. Dashboard e Indicadores Gerais do Depósito")
+            print("3. Catálogo de Peças (Cadastrar, Consultar SKU, Pesquisar, A-Z)")
+            print("4. Gestão de Estoque (Entradas, Ajustes, Histórico e Desfazer)")
+            print("5. Gestão de Pedidos (Criar, Separar com Rota BFS, Expedir)")
+            print("6. Gestão de Vendas e Faturamento (Venda Direta, Relatórios e Ranking)")
+            print("7. Layout do Depósito e Rotas de Coleta")
+            print("8. Relatório de Estoque Mínimo")
+            print("9. Carregar Peças de Demonstração (opcional)")
+            print("0. Sair")
+            print("-" * 67)
 
-            opcao = input("Escolha uma opção (0-8): ").strip()
+            opcao = input("Escolha uma opção (0-9): ").strip()
 
             if opcao == "1":
                 self.menu_tutorial()
@@ -119,42 +117,46 @@ class InterfaceCLI:
             elif opcao == "5":
                 self.menu_pedidos()
             elif opcao == "6":
-                self.menu_deposito()
+                self.menu_vendas()
             elif opcao == "7":
-                self.menu_alertas()
+                self.menu_deposito()
             elif opcao == "8":
+                self.menu_alertas()
+            elif opcao == "9":
                 self._popular_dados_demonstrativos()
             elif opcao == "0":
-                print("\n👋 Encerrando o sistema TechDepot Logistics. Até logo!")
+                print("\nEncerrando o sistema TecLogística. Até logo!")
                 break
             else:
-                print("⚠️ Opção inválida. Digite um número de 0 a 8.")
+                print("[AVISO] Opção inválida. Digite um número de 0 a 9.")
 
     def menu_dashboard(self) -> None:
-        """Exibe o painel estatístico com indicadores estratégicos do depósito."""
+        """Exibe o painel estatístico com indicadores gerais do depósito."""
         dados = self.gerenciador.obter_resumo_estatistico()
-        print("\n" + "=" * 69)
-        print("  📊 TECHDEPOT LOGISTICS — DASHBOARD E INDICADORES GERAIS")
-        print("=" * 69)
-        print(f"  📦 Total de Peças (SKUs Distintos): {dados['total_skus']}")
-        print(f"  🏭 Total de Unidades Físicas:       {dados['total_unidades_fisicas']} unidades")
-        print(f"  🔒 Unidades Reservadas em Pedidos: {dados['total_unidades_reservadas']} unidades")
-        print(f"  💰 Valor Patrimonial em Estoque:    {dados['valor_patrimonio_formatado']}")
-        print(f"  ⚠️ Peças em Estoque Crítico:       {dados['qtd_abaixo_minimo']} item(ns)")
-        print(f"  🗺️  Setores Conectados no Depósito: {dados['setores_cadastrados']}")
-        print("-" * 69)
-        print(f"  📑 Pedidos Pendentes (Em Aberto):  {dados['qtd_pedidos_abertos']}")
-        print(f"  📦 Pedidos Separados (Reservados): {dados['qtd_pedidos_separados']}")
-        print(f"  🚚 Pedidos Expedidos (Concluídos):  {dados['qtd_pedidos_expedidos']}")
+        print("\n" + "=" * 67)
+        print("  TECLOGÍSTICA — DASHBOARD E INDICADORES GERAIS")
+        print("=" * 67)
+        print(f"  Total de Peças (SKUs Distintos): {dados['total_skus']}")
+        print(f"  Total de Unidades Físicas:       {dados['total_unidades_fisicas']} unidades")
+        print(f"  Unidades Reservadas em Pedidos: {dados['total_unidades_reservadas']} unidades")
+        print(f"  Valor Patrimonial em Estoque:    {dados['valor_patrimonio_formatado']}")
+        print(f"  Peças em Estoque Crítico:       {dados['qtd_abaixo_minimo']} item(ns)")
+        print(f"  Setores Conectados no Depósito: {dados['setores_cadastrados']}")
+        print("-" * 67)
+        print(f"  Faturamento Total de Vendas:     {dados['faturamento_total_formatado']}")
+        print(f"  Total de Vendas Realizadas:      {dados['qtd_vendas_realizadas']} venda(s)")
+        print(f"  Pedidos Pendentes (Em Aberto):  {dados['qtd_pedidos_abertos']}")
+        print(f"  Pedidos Separados (Reservados): {dados['qtd_pedidos_separados']}")
+        print(f"  Pedidos Expedidos (Concluídos):  {dados['qtd_pedidos_expedidos']}")
         if dados["peca_mais_valiosa"]:
             pm = dados["peca_mais_valiosa"]
-            print(f"  💎 Peça de Maior Valor Unitário:   [{pm.sku}] {pm.nome} ({pm.preco_formatado})")
-        print("=" * 69)
+            print(f"  Peça de Maior Valor Unitário:   [{pm.sku}] {pm.nome} ({pm.preco_formatado})")
+        print("=" * 67)
         input("\nPressione ENTER para voltar ao Menu Principal...")
 
     def _popular_dados_demonstrativos(self) -> None:
         """Inclui peças de demonstração apenas quando o usuário escolhe essa opção."""
-        print("\n[*] Incluindo peças de demonstração que ainda não existem no catálogo...")
+        print("\n[+] Incluindo peças de demonstração no catálogo...")
 
         pecas_demo = [
             ("RAM-DDR4-8GB", "Memória RAM DDR4 8GB 3200MHz", "Memória", "Kingston", 14990, 25, 10, "CORREDOR-A"),
@@ -180,7 +182,7 @@ class InterfaceCLI:
         locais_ausentes = sorted(locais_necessarios - self.gerenciador.grafo_deposito.conexoes.keys())
         if locais_ausentes:
             print(
-                "⚠️ Antes de carregar os exemplos, conecte estes setores ao mapa: "
+                "[AVISO] Antes de carregar os exemplos, conecte estes setores ao mapa: "
                 + ", ".join(locais_ausentes)
             )
             return
@@ -203,16 +205,16 @@ class InterfaceCLI:
             )
             adicionadas += 1
 
-        print(f"✅ {adicionadas} nova(s) peça(s) agregada(s) ao estoque com sucesso!")
+        print(f"[OK] {adicionadas} nova(s) peça(s) adicionada(s) ao estoque com sucesso!")
         if existentes:
-            print(f"ℹ️ {existentes} peça(s) de demonstração já estavam cadastradas e não foram alteradas.")
-        print(f"📦 Total atual no catálogo: {len(self.gerenciador.listar_pecas())} itens.")
+            print(f"[INFO] {existentes} peça(s) de demonstração já estavam cadastradas e não foram alteradas.")
+        print(f"[INFO] Total atual no catálogo: {len(self.gerenciador.listar_pecas())} itens.")
 
     # --- MENUS SECUNDÁRIOS ---
 
     def menu_catalogo(self) -> None:
         while True:
-            print("\n--- 📦 MENU DE CATÁLOGO DE PEÇAS ---")
+            print("\n--- MENU DE CATÁLOGO DE PEÇAS ---")
             print("1. Cadastrar Nova Peça")
             print("2. Consultar Peça por SKU (Tabela Hash O(1))")
             print("3. Pesquisar por Nome/Categoria")
@@ -223,7 +225,10 @@ class InterfaceCLI:
 
             op = input("Escolha uma opção (0-6): ").strip()
             if op == "1":
-                sku = input("Digite o SKU único (ex: GPU-RTX-3060): ").strip()
+                sku = input("Digite o SKU único (ex: GPU-RTX-3060) [ou ENTER para cancelar]: ").strip()
+                if not sku or sku.upper() in ("CANCELAR", "VOLTAR"):
+                    print("[INFO] Cadastro cancelado.")
+                    continue
                 nome = input("Nome do produto: ").strip()
                 categoria = input("Categoria (ex: Placa de Vídeo, RAM): ").strip()
                 fabricante = input("Fabricante: ").strip()
@@ -243,15 +248,27 @@ class InterfaceCLI:
                         estoque_minimo=est_min,
                         localizacao=local,
                     )
-                    print(f"\n✅ Peça cadastrada com sucesso! {peca}")
+                    print(f"\n[OK] Peça cadastrada com sucesso! {peca}")
                 except ValueError as err:
-                    print(f"❌ Erro ao cadastrar peça: {err}")
+                    print(f"[ERRO] Erro ao cadastrar peça: {err}")
 
             elif op == "2":
-                sku = input("Digite o SKU para busca direta na Tabela Hash: ").strip()
+                sku = input("Digite o SKU para busca na Tabela Hash [ou '?' para buscar por nome]: ").strip()
+                if not sku or sku.upper() in ("CANCELAR", "VOLTAR"):
+                    continue
+                if sku.upper() in ("?", "BUSCAR", "PESQUISAR", "LISTAR"):
+                    termo = input("Pesquisar produto por Nome/Categoria (ENTER para ver todos): ").strip()
+                    res = self.gerenciador.pesquisar_pecas(termo)
+                    print(f"\n--- RESULTADO DA BUSCA ({len(res)} itens) ---")
+                    for p in res:
+                        print(f"  • SKU: {p.sku:<16} | {p.nome:<40} | Preço: {p.preco_formatado} | Estoque: {p.estoque_atual}")
+                    sku = input("\nDigite o SKU desejado da lista acima: ").strip()
+                    if not sku:
+                        continue
+
                 peca = self.gerenciador.buscar_peca_sku(sku)
                 if peca:
-                    print("\n🔍 Resultado da Tabela Hash O(1):")
+                    print("\n[RESULTADO] Consulta na Tabela Hash O(1):")
                     print(f"  • SKU: {peca.sku}")
                     print(f"  • Nome: {peca.nome}")
                     print(f"  • Categoria: {peca.categoria} | Fabricante: {peca.fabricante}")
@@ -259,7 +276,7 @@ class InterfaceCLI:
                     print(f"  • Estoque Físico: {peca.estoque_atual} | Reservado: {peca.estoque_reservado} | Livre: {peca.estoque_disponivel}")
                     print(f"  • Localização no Depósito: {peca.localizacao}")
                 else:
-                    print(f"⚠️ Nenhuma peça encontrada com o SKU '{sku}'.")
+                    print(f"[AVISO] Nenhuma peça encontrada com o SKU '{sku}'.")
 
             elif op == "3":
                 termo = input("Digite o nome ou categoria para pesquisar: ").strip()
@@ -272,14 +289,26 @@ class InterfaceCLI:
                 pecas = self.gerenciador.listar_pecas()
                 print(f"\n--- TOTAL DE PEÇAS NO CATÁLOGO: {len(pecas)} ---")
                 for p in pecas:
-                    alert = " ⚠️ [ESTOQUE BAIXO]" if p.abaixo_do_minimo else ""
+                    alert = " [ESTOQUE BAIXO]" if p.abaixo_do_minimo else ""
                     print(f"  - [{p.sku:<16}] {p.nome:<45} | {p.preco_formatado:<11} | Est: {p.estoque_atual:<3} (Livre: {p.estoque_disponivel:<3}) | Local: {p.localizacao}{alert}")
 
             elif op == "5":
-                sku = input("SKU da peça que deseja atualizar: ").strip()
+                sku = input("SKU da peça que deseja atualizar [ou '?' para buscar]: ").strip()
+                if not sku or sku.upper() in ("CANCELAR", "VOLTAR"):
+                    continue
+                if sku.upper() in ("?", "BUSCAR", "PESQUISAR", "LISTAR"):
+                    termo = input("Pesquisar produto por Nome/Categoria (ENTER para ver todos): ").strip()
+                    res = self.gerenciador.pesquisar_pecas(termo)
+                    print(f"\n--- RESULTADO DA BUSCA ({len(res)} itens) ---")
+                    for p in res:
+                        print(f"  • SKU: {p.sku:<16} | {p.nome:<40} | Local: {p.localizacao}")
+                    sku = input("\nSKU da peça que deseja atualizar: ").strip()
+                    if not sku:
+                        continue
+
                 atual = self.gerenciador.buscar_peca_sku(sku)
                 if atual is None:
-                    print(f"⚠️ Nenhuma peça encontrada com o SKU '{sku}'.")
+                    print(f"[AVISO] Nenhuma peça encontrada com o SKU '{sku}'.")
                     continue
                 print("Deixe um campo em branco para manter o valor atual.")
                 nome = input(f"Nome [{atual.nome}]: ").strip() or atual.nome
@@ -290,7 +319,7 @@ class InterfaceCLI:
                     try:
                         preco_centavos = converter_reais_centavos(preco_txt)
                     except ValueError as err:
-                        print(f"⚠️ {err}")
+                        print(f"[AVISO] {err}")
                         continue
                 else:
                     preco_centavos = atual.preco_centavos
@@ -299,12 +328,12 @@ class InterfaceCLI:
                     atualizada = self.gerenciador.atualizar_peca(
                         sku, nome, categoria, fabricante, preco_centavos, localizacao
                     )
-                    print(f"✅ Dados atualizados: {atualizada}")
+                    print(f"[OK] Dados atualizados: {atualizada}")
                 except ValueError as err:
-                    print(f"❌ Erro ao atualizar peça: {err}")
+                    print(f"[ERRO] Erro ao atualizar peça: {err}")
 
             elif op == "6":
-                print("\n--- 🔤 PEÇAS EM ORDEM ALFABÉTICA (A-Z) ---")
+                print("\n--- PEÇAS EM ORDEM ALFABÉTICA (A-Z) ---")
                 print("1. Ordenar por Nome do Produto")
                 print("2. Ordenar por SKU")
                 c_op = input("Escolha o campo de ordenação (1 ou 2): ").strip()
@@ -312,44 +341,72 @@ class InterfaceCLI:
                 pecas_ord = self.gerenciador.listar_pecas_ordem_alfabetica(por_campo=campo)
                 print(f"\n--- {len(pecas_ord)} PEÇA(S) ORDENADA(S) POR {campo.upper()} (A-Z) ---")
                 for p in pecas_ord:
-                    alert = " ⚠️ [ESTOQUE BAIXO]" if p.abaixo_do_minimo else ""
+                    alert = " [ESTOQUE BAIXO]" if p.abaixo_do_minimo else ""
                     print(f"  - [{p.sku:<16}] {p.nome:<45} | {p.preco_formatado:<11} | Est: {p.estoque_atual:<3} | Local: {p.localizacao}{alert}")
 
             elif op == "0":
                 break
             else:
-                print("⚠️ Opção inválida. Escolha uma opção entre 0 e 6.")
+                print("[AVISO] Opção inválida. Escolha uma opção entre 0 e 6.")
 
     def menu_estoque(self) -> None:
         while True:
-            print("\n--- 📊 MENU DE GESTÃO DE ESTOQUE E RASTREABILIDADE ---")
+            print("\n--- MENU DE GESTÃO DE ESTOQUE E RASTREABILIDADE ---")
             print("1. Registrar Entrada de Mercadoria (Recebimento)")
             print("2. Registrar Ajuste Manual de Estoque (Ganho/Perda)")
             print("3. Ver Histórico de Movimentações (Trilha de Rastreabilidade)")
-            print("4. ↩️ Desfazer Última Operação (Pilha LIFO Encadeada)")
+            print("4. Desfazer Última Operação (Pilha LIFO Encadeada)")
             print("0. Voltar ao Menu Principal")
 
             op = input("Escolha uma opção (0-4): ").strip()
             if op == "1":
-                sku = input("SKU da peça recebida: ").strip()
+                sku = input("SKU da peça recebida [? para buscar / ENTER para cancelar]: ").strip()
+                if not sku or sku.upper() in ("CANCELAR", "VOLTAR"):
+                    print("[INFO] Operação cancelada.")
+                    continue
+                if sku.upper() in ("?", "BUSCAR", "PESQUISAR", "LISTAR"):
+                    termo = input("Pesquisar produto por Nome/Categoria (ENTER para ver todos): ").strip()
+                    res = self.gerenciador.pesquisar_pecas(termo)
+                    print(f"\n--- RESULTADO DA BUSCA ({len(res)} itens) ---")
+                    for p in res:
+                        print(f"  • SKU: {p.sku:<16} | {p.nome:<40} | Estoque Atual: {p.estoque_atual}")
+                    sku = input("\nSKU da peça recebida [ENTER para cancelar]: ").strip()
+                    if not sku or sku.upper() in ("CANCELAR", "VOLTAR"):
+                        print("[INFO] Operação cancelada.")
+                        continue
+
                 qtd = ler_inteiro("Quantidade recebida: ", minimo=1)
                 obs = input("Observação/Nota Fiscal (opcional): ").strip()
                 try:
                     peca = self.gerenciador.registrar_entrada(sku, qtd, obs or "Recebimento")
-                    print(f"✅ Entrada registrada com sucesso! Novo estoque de '{peca.sku}': {peca.estoque_atual}")
+                    print(f"[OK] Entrada registrada com sucesso! Novo estoque de '{peca.sku}': {peca.estoque_atual}")
                 except ValueError as err:
-                    print(f"❌ Erro ao registrar entrada: {err}")
+                    print(f"[ERRO] Erro ao registrar entrada: {err}")
 
             elif op == "2":
-                sku = input("SKU da peça para ajuste: ").strip()
+                sku = input("SKU da peça para ajuste [? para buscar / ENTER para cancelar]: ").strip()
+                if not sku or sku.upper() in ("CANCELAR", "VOLTAR"):
+                    print("[INFO] Operação cancelada.")
+                    continue
+                if sku.upper() in ("?", "BUSCAR", "PESQUISAR", "LISTAR"):
+                    termo = input("Pesquisar produto por Nome/Categoria (ENTER para ver todos): ").strip()
+                    res = self.gerenciador.pesquisar_pecas(termo)
+                    print(f"\n--- RESULTADO DA BUSCA ({len(res)} itens) ---")
+                    for p in res:
+                        print(f"  • SKU: {p.sku:<16} | {p.nome:<40} | Estoque Atual: {p.estoque_atual}")
+                    sku = input("\nSKU da peça para ajuste [ENTER para cancelar]: ").strip()
+                    if not sku or sku.upper() in ("CANCELAR", "VOLTAR"):
+                        print("[INFO] Operação cancelada.")
+                        continue
+
                 print("Digite a variação (ex: 5 para adicionar 5 unidades, -2 para remover 2 por avaria):")
                 qtd_delta = ler_inteiro("Variação do ajuste: ")
                 obs = input("Motivo do ajuste: ").strip()
                 try:
                     peca = self.gerenciador.registrar_ajuste(sku, qtd_delta, obs or "Ajuste manual")
-                    print(f"✅ Ajuste realizado! Novo estoque atual de '{peca.sku}': {peca.estoque_atual}")
+                    print(f"[OK] Ajuste realizado! Novo estoque atual de '{peca.sku}': {peca.estoque_atual}")
                 except ValueError as err:
-                    print(f"❌ Erro ao realizar ajuste: {err}")
+                    print(f"[ERRO] Erro ao realizar ajuste: {err}")
 
             elif op == "3":
                 sku_filtro = input("Filtrar por SKU (deixe em branco para ver todos): ").strip()
@@ -361,18 +418,18 @@ class InterfaceCLI:
             elif op == "4":
                 try:
                     msg = self.gerenciador.desfazer_ultima_operacao()
-                    print(f"✅ {msg}")
+                    print(f"[OK] {msg}")
                 except ValueError as err:
-                    print(f"⚠️ Não foi possível desfazer: {err}")
+                    print(f"[AVISO] Não foi possível desfazer: {err}")
 
             elif op == "0":
                 break
             else:
-                print("⚠️ Opção inválida. Escolha uma opção entre 0 e 4.")
+                print("[AVISO] Opção inválida. Escolha uma opção entre 0 e 4.")
 
     def menu_pedidos(self) -> None:
         while True:
-            print("\n--- 📑 MENU DE GESTÃO DE PEDIDOS E EXPEDIÇÃO ---")
+            print("\n--- MENU DE GESTÃO DE PEDIDOS E EXPEDIÇÃO ---")
             print("1. Criar Novo Pedido de Clientes")
             print("2. Separar Pedido (Reservar Estoque e Gerar Rota BFS no Grafo)")
             print("3. Expedir Pedido (Baixar Estoque Físico e Finalizar)")
@@ -382,8 +439,16 @@ class InterfaceCLI:
 
             op = input("Escolha uma opção (0-5): ").strip()
             if op == "1":
-                pid = input("Código do Pedido (ex: PED-1001): ").strip()
-                cliente = input("Nome do Cliente: ").strip()
+                pid = input("Código do Pedido (ex: PED-1001) [ou ENTER para cancelar]: ").strip()
+                if not pid or pid.upper() in ("CANCELAR", "VOLTAR"):
+                    print("[INFO] Operação de criação de pedido cancelada.")
+                    continue
+
+                cliente = input("Nome do Cliente [ou ENTER para cancelar]: ").strip()
+                if not cliente or cliente.upper() in ("CANCELAR", "VOLTAR"):
+                    print("[INFO] Operação de criação de pedido cancelada.")
+                    continue
+
                 print("Escolha a urgência do pedido:")
                 print("  1 - Alta (Urgente / Prioridade Máxima no Heap)")
                 print("  2 - Média (Normal)")
@@ -391,52 +456,76 @@ class InterfaceCLI:
                 urg = ler_inteiro("Urgência (1-3): ", minimo=1, maximo=3)
 
                 itens = []
+                cancelou = False
                 while True:
-                    sku_item = input("\nSKU do item a adicionar (ou deixe em branco para finalizar itens): ").strip()
+                    print("\n[Dica: Digite '?' para buscar o SKU, 'CANCELAR' para sair ou ENTER para concluir]")
+                    sku_item = input("SKU do item a adicionar: ").strip()
+
+                    if sku_item.upper() in ("?", "BUSCAR", "PESQUISAR", "LISTAR"):
+                        termo = input("Pesquisar produto por Nome/Categoria (ENTER para ver todos): ").strip()
+                        res = self.gerenciador.pesquisar_pecas(termo)
+                        print(f"\n--- RESULTADO DA BUSCA ({len(res)} itens) ---")
+                        for p in res:
+                            print(f"  • SKU: {p.sku:<16} | {p.nome:<40} | Preço: {p.preco_formatado} | Estoque: {p.estoque_atual}")
+                        continue
+
+                    if sku_item.upper() in ("CANCELAR", "VOLTAR"):
+                        print("[INFO] Operação de pedido cancelada.")
+                        cancelou = True
+                        break
+
                     if not sku_item:
                         if not itens:
-                            print("⚠️ O pedido precisa de pelo menos 1 item.")
+                            confirma = input("Nenhum item adicionado. Deseja cancelar o pedido? [S/n]: ").strip().lower()
+                            if confirma in ("", "s", "sim", "y"):
+                                print("[INFO] Operação de pedido cancelada.")
+                                cancelou = True
+                                break
                             continue
                         break
+
                     peca = self.gerenciador.buscar_peca_sku(sku_item)
                     if not peca:
-                        print(f"⚠️ Peça '{sku_item}' não encontrada no catálogo.")
+                        print(f"[AVISO] Peça '{sku_item}' não encontrada. Digite '?' para buscar o SKU correto.")
                         continue
                     qtd_item = ler_inteiro(f"Quantidade de '{peca.sku}' ({peca.nome}): ", minimo=1)
                     itens.append((peca.sku, qtd_item))
 
+                if cancelou or not itens:
+                    continue
+
                 try:
                     pedido = self.gerenciador.criar_pedido(pid, cliente, itens, urgencia=urg)
-                    print(f"✅ Pedido #{pedido.id_pedido} criado com sucesso e adicionado ao MinHeap de prioridades!")
+                    print(f"[OK] Pedido #{pedido.id_pedido} criado com sucesso e adicionado ao MinHeap de prioridades!")
                 except ValueError as err:
-                    print(f"❌ Erro ao criar pedido: {err}")
+                    print(f"[ERRO] Erro ao criar pedido: {err}")
 
             elif op == "2":
                 pid = input("ID do Pedido a separar: ").strip()
                 try:
                     pedido, rotas = self.gerenciador.separar_pedido(pid)
-                    print(f"\n✅ Pedido #{pedido.id_pedido} SEPARADO e estoque RESERVADO!")
-                    print("🗺️  ROTAS DE COLETA CALCULADAS NO DEPÓSITO VIA BFS (Grafo):")
+                    print(f"\n[OK] Pedido #{pedido.id_pedido} SEPARADO e estoque RESERVADO!")
+                    print("ROTAS DE COLETA CALCULADAS NO DEPÓSITO VIA BFS (Grafo):")
                     for sku, rota in rotas.items():
-                        print(f"  • Item SKU [{sku}] -> Rota: {' ➔ '.join(rota)}")
+                        print(f"  • Item SKU [{sku}] -> Rota: {' -> '.join(rota)}")
                 except ValueError as err:
-                    print(f"❌ Falha ao separar pedido: {err}")
+                    print(f"[ERRO] Falha ao separar pedido: {err}")
 
             elif op == "3":
                 pid = input("ID do Pedido a expedir: ").strip()
                 try:
                     pedido = self.gerenciador.expedir_pedido(pid)
-                    print(f"✅ Pedido #{pedido.id_pedido} EXPEDIDO com sucesso! Estoque baixado.")
+                    print(f"[OK] Pedido #{pedido.id_pedido} EXPEDIDO com sucesso! Estoque baixado.")
                 except ValueError as err:
-                    print(f"❌ Erro ao expedir pedido: {err}")
+                    print(f"[ERRO] Erro ao expedir pedido: {err}")
 
             elif op == "4":
                 pid = input("ID do Pedido a cancelar: ").strip()
                 try:
                     pedido = self.gerenciador.cancelar_pedido(pid)
-                    print(f"✅ Pedido #{pedido.id_pedido} CANCELADO e reservas liberadas.")
+                    print(f"[OK] Pedido #{pedido.id_pedido} CANCELADO e reservas liberadas.")
                 except ValueError as err:
-                    print(f"❌ Erro ao cancelar pedido: {err}")
+                    print(f"[ERRO] Erro ao cancelar pedido: {err}")
 
             elif op == "5":
                 pedidos = self.gerenciador.listar_pedidos()
@@ -448,11 +537,115 @@ class InterfaceCLI:
             elif op == "0":
                 break
             else:
-                print("⚠️ Opção inválida. Escolha uma opção entre 0 e 5.")
+                print("[AVISO] Opção inválida. Escolha uma opção entre 0 e 5.")
+
+    def menu_vendas(self) -> None:
+        while True:
+            print("\n--- MENU DE GESTÃO DE VENDAS E FATURAMENTO ---")
+            print("1. Registrar Venda Direta (Balcão / PDV)")
+            print("2. Consultar Histórico de Vendas Faturadas")
+            print("3. Relatório de Faturamento e Ranking de Peças Mais Vendidas")
+            print("0. Voltar ao Menu Principal")
+
+            op = input("Escolha uma opção (0-3): ").strip()
+            if op == "1":
+                vid = input("Código da Venda (ex: VND-5001) [ou ENTER para cancelar]: ").strip()
+                if not vid or vid.upper() in ("CANCELAR", "VOLTAR"):
+                    print("[INFO] Operação de venda cancelada.")
+                    continue
+
+                cliente = input("Nome do Cliente [ou ENTER para cancelar]: ").strip()
+                if not cliente or cliente.upper() in ("CANCELAR", "VOLTAR"):
+                    print("[INFO] Operação de venda cancelada.")
+                    continue
+
+                itens = []
+                cancelou = False
+                while True:
+                    print("\n[Dica: Digite '?' para buscar o SKU, 'CANCELAR' para sair ou ENTER para concluir]")
+                    sku_item = input("SKU do item a vender: ").strip()
+
+                    if sku_item.upper() in ("?", "BUSCAR", "PESQUISAR", "LISTAR"):
+                        termo = input("Pesquisar produto por Nome/Categoria (ENTER para ver todos): ").strip()
+                        res = self.gerenciador.pesquisar_pecas(termo)
+                        print(f"\n--- RESULTADO DA BUSCA ({len(res)} itens) ---")
+                        for p in res:
+                            print(f"  • SKU: {p.sku:<16} | {p.nome:<40} | R$: {p.preco_formatado} | Livre: {p.estoque_disponivel}")
+                        continue
+
+                    if sku_item.upper() in ("CANCELAR", "VOLTAR"):
+                        print("[INFO] Operação de venda cancelada.")
+                        cancelou = True
+                        break
+
+                    if not sku_item:
+                        if not itens:
+                            confirma = input("Nenhum item adicionado. Deseja cancelar a venda? [S/n]: ").strip().lower()
+                            if confirma in ("", "s", "sim", "y"):
+                                print("[INFO] Operação de venda cancelada.")
+                                cancelou = True
+                                break
+                            continue
+                        break
+
+                    peca = self.gerenciador.buscar_peca_sku(sku_item)
+                    if not peca:
+                        print(f"[AVISO] Peça '{sku_item}' não encontrada. Digite '?' para buscar o SKU correto.")
+                        continue
+                    qtd_item = ler_inteiro(
+                        f"Quantidade de '{peca.sku}' ({peca.nome}) [Disponível: {peca.estoque_disponivel}]: ",
+                        minimo=1,
+                    )
+                    itens.append((peca.sku, qtd_item))
+
+                if cancelou or not itens:
+                    continue
+
+                try:
+                    venda = self.gerenciador.registrar_venda_direta(vid, cliente, itens)
+                    print(f"[OK] Venda #{venda.id_venda} registrada com sucesso! Total: {venda.valor_total_formatado}")
+                except ValueError as err:
+                    print(f"[ERRO] Erro ao registrar venda: {err}")
+
+            elif op == "2":
+                vendas = self.gerenciador.listar_vendas()
+                print(f"\n--- HISTÓRICO DE VENDAS FATURADAS ({len(vendas)} registradas) ---")
+                for v in vendas:
+                    origem = f" | Pedido Origem: #{v.id_pedido_origem}" if v.id_pedido_origem else " | Venda Direta"
+                    itens_str = ", ".join([f"{it.quantidade}x {it.sku} ({it.subtotal_formatado})" for it in v.itens])
+                    print(f"  • Venda #{v.id_venda} | Cliente: {v.cliente}{origem} | Total: {v.valor_total_formatado} | Data: {v.data_venda}")
+                    print(f"    Itens: [{itens_str}]")
+
+            elif op == "3":
+                rel = self.gerenciador.obter_relatorio_vendas()
+                print("\n" + "=" * 67)
+                print("  RELATÓRIO DE FATURAMENTO E PERFORMANCE DE VENDAS")
+                print("=" * 67)
+                print(f"  Faturamento Total Acumulado: {rel['faturamento_total_formatado']}")
+                print(f"  Total de Vendas Realizadas:  {rel['total_vendas']} vendas")
+                print(f"  Ticket Médio por Venda:     {rel['ticket_medio_formatado']}")
+                print("-" * 67)
+                print("  RANKING DAS PEÇAS MAIS VENDIDAS:")
+                if not rel["ranking_vendas_sku"]:
+                    print("     (Nenhuma venda registrada até o momento)")
+                else:
+                    for pos, (sku, info) in enumerate(rel["ranking_vendas_sku"], 1):
+                        peca = self.gerenciador.buscar_peca_sku(sku)
+                        nome_peca = peca.nome if peca else sku
+                        f_r, f_c = divmod(info['faturamento_centavos'], 100)
+                        f_fmt = f"R$ {f_r:,},{f_c:02d}".replace(",", ".")
+                        print(f"     {pos:2d}º [{sku:<16}] {nome_peca:<35} | Qtd Vendida: {info['quantidade']:<4} | Faturamento: {f_fmt}")
+                print("=" * 67)
+                input("\nPressione ENTER para voltar...")
+
+            elif op == "0":
+                break
+            else:
+                print("[AVISO] Opção inválida. Escolha uma opção entre 0 e 3.")
 
     def menu_deposito(self) -> None:
         while True:
-            print("\n--- 🗺️  MENU DE LAYOUT DO DEPÓSITO E GRAFOS ---")
+            print("\n--- MENU DE LAYOUT DO DEPÓSITO E GRAFOS ---")
             print("1. Visualizar Corredores Conectados (Grafo)")
             print("2. Cadastrar Novo Corredor / Conexão no Depósito")
             print("3. Testar Rota BFS entre Dois Setores")
@@ -462,7 +655,7 @@ class InterfaceCLI:
             if op == "1":
                 print("\nMAPA DE ADJACÊNCIA DO DEPÓSITO (GRAFO POR LISTA DE ADJACÊNCIA):")
                 for setor, vizinhos in self.gerenciador.grafo_deposito.conexoes.items():
-                    print(f"  • Setor [{setor}] ↔ Vizinhos: {', '.join(vizinhos)}")
+                    print(f"  • Setor [{setor}] <-> Vizinhos: {', '.join(vizinhos)}")
 
             elif op == "2":
                 p_a = input("Setor Origem (ex: CORREDOR-A): ").strip()
@@ -470,73 +663,75 @@ class InterfaceCLI:
                 try:
                     self.gerenciador.banco.salvar_via_deposito(p_a, p_b)
                     self.gerenciador.grafo_deposito.adicionar_via(p_a, p_b)
-                    print(f"✅ Via cadastrada entre '{p_a.upper()}' e '{p_b.upper()}'.")
+                    print(f"[OK] Via cadastrada entre '{p_a.upper()}' e '{p_b.upper()}'.")
                 except ValueError as err:
-                    print(f"❌ Erro: {err}")
+                    print(f"[ERRO] Erro: {err}")
 
             elif op == "3":
                 origem = input("Setor de Origem (ex: EXPEDICAO): ").strip()
                 destino = input("Setor de Destino (ex: SETOR-PLACAS): ").strip()
                 rota = self.gerenciador.grafo_deposito.bfs(origem, destino)
                 if rota:
-                    print(f"\n✅ Menor trajeto em conexões (BFS): {' ➔ '.join(rota)} ({len(rota)-1} passos)")
+                    print(f"\n[OK] Menor trajeto em conexões (BFS): {' -> '.join(rota)} ({len(rota)-1} passos)")
                 else:
-                    print(f"⚠️ Não há rota acessível entre '{origem}' e '{destino}'.")
+                    print(f"[AVISO] Não há rota acessível entre '{origem}' e '{destino}'.")
 
             elif op == "0":
                 break
             else:
-                print("⚠️ Opção inválida. Escolha uma opção entre 0 e 3.")
+                print("[AVISO] Opção inválida. Escolha uma opção entre 0 e 3.")
 
     def menu_alertas(self) -> None:
-        print("\n--- ⚠️ RELATÓRIO DE REPOSIÇÃO E ESTOQUE MÍNIMO ---")
+        print("\n--- RELATÓRIO DE REPOSIÇÃO E ESTOQUE MÍNIMO ---")
         abaixo = self.gerenciador.listar_abaixo_minimo()
         if not abaixo:
-            print("✅ Excelente! Todas as peças estão com níveis de estoque acima do limite mínimo.")
+            print("[OK] Todas as peças estão com níveis de estoque acima do limite mínimo.")
         else:
-            print(f"⚠️ ATENÇÃO: {len(abaixo)} peça(s) necessitam de reposição imediata:")
+            print(f"[ATENÇÃO] {len(abaixo)} peça(s) necessitam de reposição imediata:")
             for p in abaixo:
                 print(f"  - SKU: {p.sku:<16} | Nome: {p.nome:<45} | Atual: {p.estoque_atual:<3} | Mínimo: {p.estoque_minimo:<3} | Local: {p.localizacao}")
 
     def menu_tutorial(self) -> None:
-        """Exibe o passo a passo super didático e fácil de entender para iniciantes."""
-        print("\n" + "=" * 71)
-        print("  [?] GUIA COMPLETO E DIDÁTICO DE USO - TECHDEPOT LOGISTICS")
-        print("=" * 71)
-        print("Este guia foi feito para você entender o sistema passo a passo,\n"
-              "mesmo que nunca tenha trabalhado com logística ou programação!\n")
+        """Exibe o manual de instruções e fluxo operacional do sistema."""
+        print("\n" + "=" * 73)
+        print("  GUIA COMPLETO E PASSO A PASSO DE USO — TECLOGÍSTICA")
+        print("=" * 73)
+        print("\n  Este guia apresenta a estrutura funcional e as etapas operacionais do sistema.\n")
 
-        print("------------ 💡 1. GLOSSÁRIO DE SIGLAS E TERMOS FÁCEIS ------------")
-        print(" • SKU (Stock Keeping Unit): Código único da peça (ex: RAM-DDR4-8GB).")
-        print(" • Tabela Hash: Lista de busca rápida que acha o produto direto pelo SKU.")
-        print(" • MinHeap (Fila de Urgência): Fila que coloca o pedido urgente no topo.")
-        print(" • BFS (Busca em Largura): Algoritmo que acha o menor caminho no depósito.")
-        print(" • Pilha LIFO (Último a entrar, Primeiro a sair): Mecanismo de 'Desfazer'.")
-        print(" • FIFO (Primeiro a entrar, Primeiro a sair): Ordem de chegada do pedido.\n")
+        print("+-----------------------------------------------------------------------+")
+        print("| 1. CONCEITOS E ESTRUTURAS UTILIZADAS                                  |")
+        print("+-----------------------------------------------------------------------+")
+        print("  • SKU (Stock Keeping Unit): Código único de identificação da peça.")
+        print("    Exemplo: RAM-DDR4-8GB ou GPU-RTX-4060.\n")
+        print("  • Tabela Hash: Estrutura para busca rápida (O(1) médio) pelo SKU da peça.\n")
+        print("  • MinHeap (Fila de Urgência): Fila de prioridades para ordenação de pedidos.\n")
+        print("  • BFS (Busca em Largura): Algoritmo de rotas mais curtas entre setores no depósito.\n")
+        print("  • Pilha LIFO: Histórico encadeado para desfazer a última movimentação de estoque.\n")
+        print("  • FIFO (Ordem de Chegada): Critério de desempate para pedidos de mesma urgência.\n")
 
-        print("------------ 📌 2. PASSO A PASSO PRÁTICO EM 4 ETAPAS ------------")
-        print("ETAPA 1: O CATÁLOGO DE PEÇAS (Opção 3 do Menu Principal)")
-        print("  1. Cadastre a peça informando o SKU (ex: GPU-4060), Nome, Preço e Local.")
-        print("  2. Para ver todas as peças em ordem alfabética (A-Z), escolha a opção 6.")
-        print("  3. Para achar uma peça rápido pelo SKU em tempo recorde, use a opção 2.\n")
+        print("+-----------------------------------------------------------------------+")
+        print("| 2. FLUXO OPERACIONAL DO SISTEMA                                       |")
+        print("+-----------------------------------------------------------------------+\n")
 
-        print("ETAPA 2: MOVIMENTAÇÃO E AUDITORIA DE ESTOQUE (Opção 4 do Menu Principal)")
-        print("  1. 'Entrada de Mercadoria': Use quando chegarem novas peças da fábrica.")
-        print("  2. 'Ajuste Manual': Use se perder uma peça ou precisar corrigir o saldo.")
-        print("  3. 'Desfazer Operação': Errou um lançamento? O sistema cancela a última")
-        print("     alteração e devolve a quantidade correta para o estoque!\n")
+        print("  [Etapa 1] Gestão do Catálogo de Peças (Opção 3)")
+        print("     1. Cadastre a peça informando SKU, Nome, Categoria, Preço e Localização.")
+        print("     2. Para visualizar todas as peças em Ordem Alfabética (A-Z), use a opção 6.")
+        print("     3. Para consultar uma peça pelo SKU, use a opção 2.\n")
 
-        print("ETAPA 3: O CICLO COMPLETO DE UM PEDIDO DE CLIENTE (Opção 5 do Menu Principal)")
-        print("  Passo A (Criar Pedido): Digite o cliente, a Urgência (1-Alta, 2-Média, 3-Baixa)")
-        print("          e as peças. O pedido vai para a Fila de Urgência (MinHeap).")
-        print("  Passo B (Separar Pedido): O sistema reserva as peças para o cliente e")
-        print("          desenha no mapa do depósito o caminho mais curto para coletá-las.")
-        print("  Passo C (Expedir Pedido): As peças saem do galpão para entrega e a baixa")
-        print("          é finalizada no banco de dados com segurança!\n")
+        print("  [Etapa 2] Movimentação de Estoque e Auditoria (Opção 4)")
+        print("     1. 'Entrada de Mercadoria': Registra recebimento de novas unidades.")
+        print("     2. 'Ajuste Manual': Correção de saldo (perdas, avarias ou acréscimos).")
+        print("     3. 'Desfazer Operação': Desfaz a última ação de entrada/ajuste de estoque.\n")
 
-        print("ETAPA 4: NAVEGAÇÃO NO DEPÓSITO E ALERTAS (Opções 2, 6 e 7 do Menu)")
-        print("  • Use a Opção 2 (Dashboard) para ver o valor total do estoque em R$.")
-        print("  • Use a Opção 6 para ver quais corredores estão conectados no depósito.")
-        print("  • Use a Opção 7 para ver o relatório de peças que precisam de reposição.")
-        print("=" * 71)
-        input("\nPressione ENTER para voltar ao Menu Principal...")
+        print("  [Etapa 3] Processamento de Pedidos (Opção 5)")
+        print("     1. Criar Pedido: Define cliente, urgência (1-Alta, 2-Média, 3-Baixa) e itens.")
+        print("     2. Separar Pedido: Reserva estoque e gera rota de coleta via BFS.")
+        print("     3. Expedir Pedido: Baixa definitiva do estoque e geração de venda faturada.\n")
+
+        print("  [Etapa 4] Dashboard, Relatórios e Depósito (Opções 2, 6, 7 e 8)")
+        print("     - Opção 2: Indicadores patrimoniais e contadores do sistema.")
+        print("     - Opção 7: Visualização e cadastro de corredores e conexões do galpão.")
+        print("     - Opção 8: Relatório de peças que estão abaixo do estoque mínimo.")
+
+        print("\n" + "=" * 73)
+        input("\nPressione ENTER para retornar ao Menu Principal...")
