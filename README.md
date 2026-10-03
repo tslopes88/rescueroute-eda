@@ -59,11 +59,7 @@ Projeto_Final/
 ├── estruturas.py            # Implementação manual das 4 estruturas de dados
 ├── modelos.py               # Classes de domínio (Peca, Pedido, Venda, Movimentacao)
 ├── rescueroute.py           # Ponto de entrada secundário (compatibilidade)
-├── simulador_logistica.py   # Ponto de entrada secundário (compatibilidade)
-└── tests/                   # Suíte de testes unitários e de integração
-    ├── test_estoque.py
-    ├── test_rescueroute.py
-    └── test_teclogistica.py
+└── simulador_logistica.py   # Ponto de entrada secundário (compatibilidade)
 ```
 
 ---
@@ -90,13 +86,6 @@ Abra o terminal na pasta do projeto e rode:
 
 ```bash
 python teclogistica.py
-```
-
-### 🧪 Rodar os testes
-Os testes conferem as estruturas, as regras do sistema e alguns cenários de erro. Para executá-los:
-
-```bash
-python -m unittest discover -v
 ```
 
 ✨ **Bom estudo e boas expedições!**
